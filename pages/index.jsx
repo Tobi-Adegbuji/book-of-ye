@@ -1,206 +1,166 @@
-import Head from "next/head";
-import Card from "../components/Card";
-import { useEffect, useState } from "react";
-import cardInfo from "../utils/cardData";
-import instance from "../utils/BooksOfYeContract";
-import styles from "../styles/App.module.css";
-import Tab from "../components/Tab";
-import Layout from "../components/Layout";
-import web3 from "../utils/web3";
-import Countdown from "react-countdown";
+import Card from '../components/Card'
+import { useEffect, useState } from 'react'
+import cardInfo from '../utils/cardData'
+import instance from '../utils/BooksOfYeContract'
+import styles from '../styles/App.module.css'
+import Tab from '../components/Tab'
+import Layout from '../components/Layout'
+import web3 from '../utils/web3'
+import { walletConnect, wcHooks } from '../components/connectors/WalletConnect'
+import { coinbaseWallet, cbwHooks } from '../components/connectors/Coinbase'
+import { metaHooks, metaMask } from '../components/connectors/Metamask'
+import { getPriorityConnector } from '@web3-react/core'
+import Countdown from 'react-countdown'
+import WalletModal from '../components/WalletModal'
+import DisconnectButton from '../components/DisconnectButton'
 
 function App(props) {
   const [amountLeft, setAmountLeft] = useState(
-    props.tokensLeft ? props.tokensLeft : "???"
-  );
-  const [saleEvent, setSaleEvent] = useState({});
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [metaInstalled, setMetaInstalled] = useState(false);
-  const [showSpinner, setShowSpinner] = useState(false);
-  const [cards, setCards] = useState([]);
-  const [isWhiteListed, setIsWhiteListed] = useState(false);
-  const [chainId, setChainId] = useState("");
-  const storeChainId = "0x4";
+    props.tokensLeft ? props.tokensLeft : '???'
+  )
+  const [saleEvent, setSaleEvent] = useState({})
+  const [cards, setCards] = useState([])
+  const [isWhiteListed, setIsWhiteListed] = useState(false)
+  const storeChainId = 1
 
   const cardName = [
-    "Let There Be Light",
-    "Garden Of Eden",
+    'Let There Be Light',
+    'Garden Of Eden',
     "Noah's Ark",
-    "The Tower Of Babel",
+    'The Tower Of Babel',
     "Lot's Wife",
-  ];
+  ]
   const bookPassage = [
-    "Genesis 1:3",
-    "Genesis 1:27",
-    "Genesis 7:1",
-    "Genesis 11:19",
-    "Genesis 19:26",
-  ];
+    'Genesis 1:3',
+    'Genesis 1:27',
+    'Genesis 7:1',
+    'Genesis 11:19',
+    'Genesis 19:26',
+  ]
+
+  const {
+    usePriorityAccount,
+    usePriorityIsActive,
+    usePriorityProvider,
+    usePriorityChainId,
+  } = getPriorityConnector(
+    [metaMask, metaHooks],
+    [walletConnect, wcHooks],
+    [coinbaseWallet, cbwHooks]
+  )
+
+  const account = usePriorityAccount()
+  const provider = usePriorityProvider()
+  const isConnected = usePriorityIsActive()
+  const chainId = usePriorityChainId()
 
   useEffect(() => {
-    getChainId();
-  }, [metaInstalled]);
+    metaMask.connectEagerly()
+    coinbaseWallet.connectEagerly()
+  }, [])
 
   useEffect(() => {
-    isMetaMaskInstalled();
-    checkIfLoggedIn();
-    checkChainBeforeContractInteraction();
-  }, [chainId]);
+    checkChainBeforeContractInteraction()
+  }, [chainId])
 
   const checkChainBeforeContractInteraction = async () => {
     if (chainId === storeChainId) {
-      getActiveSaleEvent();
-      refreshInventory();
-      checkIfWhiteListed();
+      getActiveSaleEvent()
+      refreshInventory()
+      checkIfWhiteListed()
     }
-  };
-
-  const getChainId = async () => {
-    if (metaInstalled) {
-      const chain = await window.ethereum.request({ method: "eth_chainId" });
-      setChainId(chain);
-    }
-  };
-
-  const checkIfLoggedIn = async () => {
-    const accounts = await web3.eth.getAccounts();
-    setLoggedIn(accounts.length != 0);
-  };
+  }
 
   const getActiveSaleEvent = async () => {
     for (let i = 0; i < 5; i++) {
-      const sEvent = await instance.methods.viewSaleStatus(i).call();
+      const sEvent = await instance.methods.viewSaleStatus(i).call()
+
       if (sEvent[1]) {
         setSaleEvent({
-          price: web3.utils.fromWei(sEvent[0], "ether"),
+          price: web3.utils.fromWei(sEvent[0], 'ether'),
           isActive: sEvent[1],
           isPreSale: sEvent[2],
           isPublicSale: sEvent[3],
           minCardId: sEvent[4],
           maxCardId: sEvent[5],
           saleEventNumber: i,
-        });
-        break;
+        })
+        break
       }
     }
-  };
+  }
 
   const getTotalTokens = () => {
-    let sum = 0;
+    let sum = 0
     cardInfo.forEach((array) => {
-      sum += array.length;
-    });
-    setAmountLeft(sum);
-  };
+      sum += array.length
+    })
+    setAmountLeft(sum)
+  }
 
   const refreshInventory = async () => {
     //Get Minted Ids
-    const ids = await instance.methods.viewMintedCards().call();
+    const ids = await instance.methods.viewMintedCards().call()
 
     //Remove the minted Ids from cardInfo arrays
     for (let i = 0; i < cardInfo.length; i++) {
       ids.forEach((mintedId) => {
-        const id = parseInt(mintedId);
+        const id = parseInt(mintedId)
         if (cardInfo[i].includes(id)) {
           for (let j = 0; j < cardInfo[i].length; j++) {
             if (cardInfo[i][j] === id) {
-              cardInfo[i].splice(j, 1);
+              cardInfo[i].splice(j, 1)
             }
           }
         }
-      });
+      })
     }
 
-    const cardProps = [];
+    const cardProps = []
 
-    const colorways = ["gold", "platinum", "crimson", "cobalt"];
+    const colorways = ['gold', 'platinum', 'crimson', 'cobalt']
 
-    let cardRow = [];
+    let cardRow = []
 
     for (let i = 0, j = 0; i < cardInfo.length; i++, j++) {
       if (j == 4) {
-        j = 0;
-        cardProps.push(cardRow);
-        cardRow = [];
+        j = 0
+        cardProps.push(cardRow)
+        cardRow = []
       }
 
+      const randIndex = Math.floor(Math.random() * cardInfo[i].length - 1) + 1
+
       const card = {
-        tokenId: cardInfo[i][0] == undefined ? -1 : cardInfo[i][0],
+        tokenId: cardInfo[i][0] == undefined ? -1 : cardInfo[i][randIndex],
         img: `${i}.png`,
         color: colorways[j],
         amount: cardInfo[i].length,
-      };
+      }
 
-      cardRow.push(card);
+      cardRow.push(card)
 
       if (i === cardInfo.length - 1) {
-        cardProps.push(cardRow);
+        cardProps.push(cardRow)
       }
     }
 
-    setCards(cardProps);
-    getTotalTokens();
-  };
-
-  const isMetaMaskInstalled = () => {
-    try {
-      const { ethereum } = window;
-      setMetaInstalled(Boolean(ethereum && ethereum.isMetaMask));
-
-      window.ethereum.on("chainChanged", (chainId) => {
-        setChainId(chainId);
-      });
-      window.ethereum.on("disconnect", (error) => {
-        setLoggedIn(false);
-      });
-      window.ethereum.on("accountsChanged", (accounts) => {
-        window.location.reload();
-      });
-    } catch (e) {
-      console.error(e);
-    }
-    
-  };
-
-  const onClickConnect = async () => {
-    try {
-      setShowSpinner(true);
-      await ethereum.request({ method: "eth_requestAccounts" });
-      const accounts = await web3.eth.getAccounts();
-      setLoggedIn(accounts.length != 0);
-      setShowSpinner(false);
-    } catch (error) {
-      console.error(error);
-      setShowSpinner(false);
-    }
-  };
+    setCards(cardProps)
+    getTotalTokens()
+  }
 
   const checkIfWhiteListed = async () => {
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    const account = accounts[0];
-    const wl = await instance.methods.checkWhitelist(0, account).call();
-    setIsWhiteListed(wl);
-  };
-
-  const detectEthereumNetwork = async () => {
-    web3.eth.net.getNetworkType().then(async (netId) => {
-      if (netId != storeChainId) {
-        await ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: storeChainId }],
-        });
-      }
-    });
-  };
+    const wl = await instance.methods.checkWhitelist(0, account).call()
+    setIsWhiteListed(wl)
+  }
 
   const refreshPage = () => {
-    window.location.reload();
-  };
+    window.location.reload()
+  }
 
   const displayCards = (
     <div className={styles.App}>
+      <DisconnectButton />
       {cards.map((cardArray, key) => {
         return (
           <div key={key} className={styles.cardRow}>
@@ -212,8 +172,6 @@ function App(props) {
                   <Card
                     key={card.tokenId}
                     refreshInventory={refreshInventory}
-                    isMetaMaskInstalled={isMetaMaskInstalled}
-                    checkIfLoggedIn={checkIfLoggedIn}
                     tokenId={card.tokenId}
                     img={card.img}
                     color={card.color}
@@ -227,82 +185,51 @@ function App(props) {
                     saleEventNumber={saleEvent.saleEventNumber}
                     getActiveSaleEvent={getActiveSaleEvent}
                   />
-                );
+                )
               })}
             </div>
           </div>
-        );
+        )
       })}
     </div>
-  );
-
-  const getConnectOrNetworkChangeText = (wrongChain, notConnected) => {
-    return chainId != storeChainId ? wrongChain : notConnected;
-  };
+  )
 
   const displayConnectScreen = (
     <div className={styles.welcomeScreen}>
       <p className={styles.welcomeSubText}>WELCOME</p>
-      <h1 className={styles.welcomeScreenText}>
-        {metaInstalled ? getConnectOrNetworkChangeText(
-          "Please Change Your Network",
-          "Please Connect Your Wallet"
-        ) : "Please Install MetaMask"}
-      </h1>
-      {metaInstalled ? (
-        <>
-          {showSpinner ? (
-            <img src="/modalCircle.png" className="rotate" />
-          ) : (
-            <button
-              onClick={
-                chainId != storeChainId ? detectEthereumNetwork : onClickConnect
-              }
-            >
-              {getConnectOrNetworkChangeText(
-                "Change Network",
-                "Connect MetaMask"
-              )}
-            </button>
-          )}
-        </>
-      ) : (
-        <>
-          <h4>{"Oops, doesn't seem you have MetaMask installed."}</h4>
-          <a href="https://metamask.io/download/" className="button">
-            Install MetaMask Here
-          </a>
-        </>
-      )}
+      <h1 className={styles.welcomeScreenText}>Please Connect Your Wallet</h1>
+      <WalletModal darkMode />
     </div>
-  );
+  )
 
   const displayScreen = () => {
-    const isActive = saleEvent.isActive;
-    const isPreSale = saleEvent.isPreSale;
-    const isPublicSale = saleEvent.isPublicSale;
+    const isActive = saleEvent.isActive
+    const isPreSale = saleEvent.isPreSale
+    const isPublicSale = saleEvent.isPublicSale
 
-    if (metaInstalled && loggedIn && chainId === storeChainId) {
+    if (isConnected && chainId === storeChainId) {
       if (!isPreSale && !isPublicSale) {
         if (isWhiteListed) {
           return (
             <>
               <p className={styles.welcomeSubText}>THANK YOU</p>;
+              <DisconnectButton />
               <h1 className={styles.welcomeScreenText}>
                 You are on the whitelist.
                 <br></br>
                 <br></br>The Pre-Sale begins in: <br></br>
                 <br></br>
-                <Countdown date={"2022-02-28T13:00:00.000-05:00"}>
+                <Countdown date={'2022-02-28T13:00:00.000-05:00'}>
                   <button onClick={refreshPage}>Enter Sale</button>
                 </Countdown>
               </h1>
               ;
             </>
-          );
+          )
         } else if (!isWhiteListed) {
           return (
             <>
+              <DisconnectButton />
               <p className={styles.welcomeSubText}>THANK YOU</p>
               <h1 className={styles.welcomeScreenText}>
                 The Sale will begin after the Pre-Sale has finished, if there is
@@ -310,15 +237,15 @@ function App(props) {
                 <br></br>
                 <br></br>The Pre-Sale begins in: <br></br>
                 <br></br>
-                <Countdown date={"2022-02-28T13:00:00.000-05:00"}></Countdown>
+                <Countdown date={'2022-02-28T13:00:00.000-05:00'}></Countdown>
               </h1>
             </>
-          );
+          )
         }
       } else if (isActive && isPreSale && isWhiteListed) {
-        return displayCards;
+        return displayCards
       } else if (isActive && isPublicSale && !isPreSale) {
-        return displayCards;
+        return displayCards
       } else if (
         (isPreSale && !isPublicSale && !isWhiteListed) ||
         (isPreSale && isPublicSale && !isWhiteListed)
@@ -332,27 +259,27 @@ function App(props) {
             </h1>
             ;
           </>
-        );
+        )
       }
     } else {
-      return displayConnectScreen;
+      return displayConnectScreen
     }
-  };
+  }
 
   const preSaleOrPublic = () => {
     if (!saleEvent.isPresale && !saleEvent.isPublicSale) {
-      return "Pre-Sale";
+      return 'Pre-Sale'
     } else if (saleEvent.isPresale && !saleEvent.isPublicSale) {
-      return "Pre-Sale";
+      return 'Pre-Sale'
     } else if (!saleEvent.isPresale && saleEvent.isPublicSale) {
-      return "Sale";
+      return 'Sale'
     }
-  };
+  }
 
   return (
     <>
       <Layout>
-        <img className={styles.logo} src={"/logo.png"} alt="" />
+        <img className={styles.logo} src={'/logo.png'} alt="" />
         {displayScreen()}
       </Layout>
       <Tab
@@ -362,7 +289,7 @@ function App(props) {
         stage={preSaleOrPublic()}
       />
     </>
-  );
+  )
 }
 
-export default App;
+export default App

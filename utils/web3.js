@@ -3,17 +3,13 @@ import Web3 from "web3";
 let web3;
 
 try {
-  if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
-    window.ethereum.request({ method: "eth_requestAccounts" });
     web3 = new Web3(
-      window.ethereum
+    new Web3.providers.HttpProvider(
+      "https://mainnet.infura.io/v3/ad98fd9132d246f994a90dd9e465f149"
+      // "https://rinkeby.infura.io/v3/84842078b09946638c03157f83405213"
+      )
     );
-  } else {
-    const provider = new Web3.providers.HttpProvider(
-      "http://127.0.0.1:8545"
-    );
-    web3 = new Web3(provider);
-  }
+
 } catch (e) {
   console.error(e);
 }
