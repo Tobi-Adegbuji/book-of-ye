@@ -21,7 +21,7 @@ function App(props) {
   const [saleEvent, setSaleEvent] = useState({})
   const [cards, setCards] = useState([])
   const [isWhiteListed, setIsWhiteListed] = useState(false)
-  const storeChainId = 1
+  const storeChainId = 4
 
   const cardName = [
     'Let There Be Light',
@@ -63,7 +63,7 @@ function App(props) {
     checkChainBeforeContractInteraction()
   }, [chainId])
 
-  const checkChainBeforeContractInteraction = async () => {
+  const checkChainBeforeContractInteraction = async () => { 
     if (chainId === storeChainId) {
       getActiveSaleEvent()
       refreshInventory()
@@ -170,6 +170,7 @@ function App(props) {
               {cardArray.map((card) => {
                 return (
                   <Card
+                    account={account}
                     key={card.tokenId}
                     refreshInventory={refreshInventory}
                     tokenId={card.tokenId}
@@ -206,7 +207,7 @@ function App(props) {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
-
+console.log(chainId)
     if (isConnected && chainId === storeChainId) {
       if (!isPreSale && !isPublicSale) {
         if (isWhiteListed) {
@@ -252,6 +253,7 @@ function App(props) {
       ) {
         return (
           <>
+            <DisconnectButton />
             <p className={styles.welcomeSubText}>THANK YOU</p>
             <h1 className={styles.welcomeScreenText}>
               The Sale will begin after the Pre-Sale has finished, if there is

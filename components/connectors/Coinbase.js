@@ -12,7 +12,7 @@ const URLS = {
   export const [coinbaseWallet, cbwHooks] = initializeConnector(
     (actions) =>
       new CoinbaseWallet(actions, {
-        url: URLS[1],
+        url: URLS[4],
         appName: 'blockchain-components-bootstrap',
       })
   )
