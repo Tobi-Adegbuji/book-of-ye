@@ -88,12 +88,10 @@ const ConnectButton = styled.div`
 function WalletModal(props) {
   const [modalIsOpen, setModalIsOpen] = useState(false)
 
-  const isActive = metaHooks.useIsActive()
-  const account = metaHooks.useAccount()
+
 
   useEffect(() => {
     metaMask.connectEagerly()
-    // coinbaseWallet.connectEagerly()
   }, [])
 
   const handleCloseModal = () => {

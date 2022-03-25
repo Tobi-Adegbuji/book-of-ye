@@ -1,14 +1,11 @@
 import React, { useState } from 'react'
 import styles from '../styles/Card.module.css'
-import web3 from '../utils/web3'
-import instance from '../utils/BooksOfYeContract'
 import ReactModal from 'react-modal'
 import { getPriorityConnector } from '@web3-react/core'
 import { walletConnect, wcHooks } from './connectors/WalletConnect'
 import { coinbaseWallet, cbwHooks } from './connectors/Coinbase'
 import { metaHooks, metaMask } from './connectors/Metamask'
 import { getContract } from '../utils/BoyContract'
-import { Web3Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 
 function Card(props) {

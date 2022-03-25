@@ -9,6 +9,5 @@ export const getContract = (account, provider) => {
   
   const signer = provider.getSigner(account)
   var contract = new Contract(contractAddress, BooksOfYe.abi, signer)
-  console.log(contract)
   return contract
 }

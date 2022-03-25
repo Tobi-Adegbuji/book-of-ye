@@ -53,7 +53,6 @@ function App(props) {
   )
 
   const account = usePriorityAccount()
-  const provider = usePriorityProvider()
   const isConnected = usePriorityIsActive()
   const chainId = usePriorityChainId()
 
@@ -62,11 +61,6 @@ function App(props) {
     coinbaseWallet.connectEagerly()
     walletConnect.connectEagerly()
   }, [])
-
-  // useEffect(() => {
-  //   if(!isConnected)
-  //     walletConnect.deactivate()
-  // }, [isConnected])
 
   useEffect(() => {
     checkChainBeforeContractInteraction()
@@ -217,7 +211,7 @@ function App(props) {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
-    console.log(chainId)
+
     if (isConnected && chainId === storeChainId) {
       if (!isPreSale && !isPublicSale) {
         if (isWhiteListed) {
