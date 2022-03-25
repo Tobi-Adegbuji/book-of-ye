@@ -4,7 +4,6 @@ import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 import ReactModal from 'react-modal'
 import WalletVendor from './WalletVendor'
-import Snackbar from '@mui/material/Snackbar'
 import { metaHooks, metaMask } from './connectors/Metamask'
 
 const Modal = styled(ReactModal)`
@@ -27,6 +26,9 @@ const Modal = styled(ReactModal)`
   box-sizing: border-box;
   max-width: 500px;
   overflow-x: hidden;
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
   :focus {
     outline: 0;
   }
@@ -78,11 +80,13 @@ const ConnectButton = styled.div`
   margin-top: 10px;
   background-color: ${(props) => (props.darkMode ? '#2F2F2F' : 'white')};
   color: ${(props) => (props.darkMode ? 'white' : 'black')};
+  @media only screen and (max-width: 600px) {
+    width: 50%;
+  }
 `
 
 function WalletModal(props) {
   const [modalIsOpen, setModalIsOpen] = useState(false)
-  const [showSnackBar, setShowSnackBar] = useState(false)
 
   const isActive = metaHooks.useIsActive()
   const account = metaHooks.useAccount()
@@ -94,18 +98,6 @@ function WalletModal(props) {
 
   const handleCloseModal = () => {
     setModalIsOpen(false)
-  }
-
-  const handleSnackBar = () => {
-    setShowSnackBar(true)
-  }
-
-  const handleCloseSnackBar = (event, reason) => {
-    if (reason === 'clickaway') {
-      return
-    }
-
-    setShowSnackBar(false)
   }
 
   useEffect(() => {
@@ -122,22 +114,6 @@ function WalletModal(props) {
       >
         CONNECT
       </ConnectButton>
-      <Snackbar
-        open={showSnackBar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackBar}
-        message={
-          isActive
-            ? `Successfully Connected: ${account}`
-            : 'Oops, something went wrong'
-        }
-        ContentProps={{
-          sx: {
-            background: props.darkMode ? '#2f2f2f' : '#f8f8ff',
-            color: props.darkMode ? 'white' : 'black',
-          },
-        }}
-      />
       <Modal
         darkMode={props.darkMode}
         isOpen={modalIsOpen}
@@ -168,21 +144,18 @@ function WalletModal(props) {
             imageUrl={
               'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg'
             }
-            displaySnackBar={handleSnackBar}
             closeModal={handleCloseModal}
           />
           <WalletVendor
             vendorName="Coinbase"
             darkMode={props.darkMode}
             imageUrl={'./coinbase.png'}
-            displaySnackBar={handleSnackBar}
             closeModal={handleCloseModal}
           />
           <WalletVendor
             vendorName="Wallet Connect"
             darkMode={props.darkMode}
             imageUrl={'./walletconnect.ico'}
-            displaySnackBar={handleSnackBar}
             closeModal={handleCloseModal}
           />
         </WalletVendorContainer>

@@ -60,7 +60,6 @@ function WalletVendor({
   imageUrl,
   vendorName,
   closeModal,
-  displaySnackBar,
 }) {
   
   //Setting all hooks to values

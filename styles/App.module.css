@@ -118,6 +118,10 @@ color: #FFFFFF;
 
 /* Extra small devices (phones, 600px and down) */
 @media only screen and (max-width: 600px) {
+  .WalletVendorContainer{
+    width: 90vw;
+  }
+  
   .welcomeScreenText{
     font-family: "Vaporetta";
     font-style: normal;
