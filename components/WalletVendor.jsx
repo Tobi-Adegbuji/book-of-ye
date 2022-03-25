@@ -94,8 +94,8 @@ function WalletVendor({
     if(vendor === "WalletConnect")
       walletConnect.activate(1)
 
+
     closeModal();
-    displaySnackBar();
   };
 
 

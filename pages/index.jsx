@@ -13,6 +13,8 @@ import { getPriorityConnector } from '@web3-react/core'
 import Countdown from 'react-countdown'
 import WalletModal from '../components/WalletModal'
 import DisconnectButton from '../components/DisconnectButton'
+import { getContract } from '../utils/BoyContract'
+
 
 function App(props) {
   const [amountLeft, setAmountLeft] = useState(
@@ -21,7 +23,8 @@ function App(props) {
   const [saleEvent, setSaleEvent] = useState({})
   const [cards, setCards] = useState([])
   const [isWhiteListed, setIsWhiteListed] = useState(false)
-  const storeChainId = 4
+  const storeChainId = 1
+  const metamaskActive = metaHooks.useIsActive();
 
   const cardName = [
     'Let There Be Light',
@@ -150,6 +153,7 @@ function App(props) {
   }
 
   const checkIfWhiteListed = async () => {
+    
     const wl = await instance.methods.checkWhitelist(0, account).call()
     setIsWhiteListed(wl)
   }
@@ -160,7 +164,7 @@ function App(props) {
 
   const displayCards = (
     <div className={styles.App}>
-      <DisconnectButton />
+      {metamaskActive ? null : <DisconnectButton /> }
       {cards.map((cardArray, key) => {
         return (
           <div key={key} className={styles.cardRow}>
@@ -207,14 +211,14 @@ function App(props) {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
-console.log(chainId)
+    console.log(chainId)
     if (isConnected && chainId === storeChainId) {
       if (!isPreSale && !isPublicSale) {
         if (isWhiteListed) {
           return (
             <>
               <p className={styles.welcomeSubText}>THANK YOU</p>;
-              <DisconnectButton />
+              {metamaskActive ? null : <DisconnectButton /> }
               <h1 className={styles.welcomeScreenText}>
                 You are on the whitelist.
                 <br></br>
@@ -230,7 +234,6 @@ console.log(chainId)
         } else if (!isWhiteListed) {
           return (
             <>
-              <DisconnectButton />
               <p className={styles.welcomeSubText}>THANK YOU</p>
               <h1 className={styles.welcomeScreenText}>
                 The Sale will begin after the Pre-Sale has finished, if there is
@@ -253,7 +256,7 @@ console.log(chainId)
       ) {
         return (
           <>
-            <DisconnectButton />
+            {metamaskActive ? null : <DisconnectButton /> }
             <p className={styles.welcomeSubText}>THANK YOU</p>
             <h1 className={styles.welcomeScreenText}>
               The Sale will begin after the Pre-Sale has finished, if there is
@@ -281,7 +284,10 @@ console.log(chainId)
   return (
     <>
       <Layout>
-        <img className={styles.logo} src={'/logo.png'} alt="" />
+        <div className={styles.header}>
+          <img className={styles.logo} src={"/logo.png"} alt="" />
+          Please note that there is a limit of 8 Cards per person.
+        </div>
         {displayScreen()}
       </Layout>
       <Tab

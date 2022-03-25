@@ -27,7 +27,6 @@ const Modal = styled(ReactModal)`
   box-sizing: border-box;
   max-width: 500px;
   overflow-x: hidden;
-
   :focus {
     outline: 0;
   }
@@ -48,7 +47,6 @@ const ModalCloseIcon = styled.div`
   margin-left: 10px;
   border-radius: 50%;
   transition: ease-in-out 0.1s;
-
   :hover {
     box-shadow: ${(props) => (props.darkMode ? '0 0 4px red' : '0 0 2px red')};
   }
@@ -65,13 +63,16 @@ const ModalTab = styled.div`
 
 const ConnectButton = styled.div`
   box-shadow: rgba(0, 0, 0, 0.1) 0.5px 0.5px 4px 0.5px;
-  width: 100%;
-  height: 30px;
+  width: 25%;
+  height: 45px;
   text-align: center;
   border-radius: 7px;
   display: flex;
   align-items: center;
   font-weight: bold;
+  font-family: Inter;
+  font-size: 14px;
+  letter-spacing: 4px;
   justify-content: center;
   cursor: pointer;
   margin-top: 10px;
@@ -119,7 +120,7 @@ function WalletModal(props) {
           setModalIsOpen(true)
         }}
       >
-        Connect
+        CONNECT
       </ConnectButton>
       <Snackbar
         open={showSnackBar}

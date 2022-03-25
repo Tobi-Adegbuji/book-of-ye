@@ -16,6 +16,15 @@
   margin: 90px 0px;
 }
 
+.header{
+  color: #fff;
+  align-items: center;
+  font-style: normal;
+  font-family: "Vaporetta";
+  display: flex;
+  justify-content: space-between;
+}
+
 .welcomeScreen{
   color: #fff;
 }

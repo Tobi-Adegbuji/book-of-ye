@@ -8,5 +8,6 @@ const URLS = {
 
 export const [walletConnect, wcHooks] = initializeConnector(
   (actions) =>
-    new WalletConnect(actions, {rpc: URLS}, true)
+    new WalletConnect(actions, {rpc: URLS}, true),
+    [1,4]
  )

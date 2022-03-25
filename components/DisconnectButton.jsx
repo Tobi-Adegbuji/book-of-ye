@@ -18,16 +18,12 @@ cursor: pointer;
 
 const DisconnectButton = () => {
 
-    const { usePriorityConnector } =
-    getPriorityConnector(
-      [metaMask, metaHooks],
-      [walletConnect, wcHooks],
-      [coinbaseWallet, cbwHooks]
-    )
+    const { usePriorityConnector } = getPriorityConnector([metaMask, metaHooks], [walletConnect, wcHooks], [coinbaseWallet, cbwHooks])
 
     const wallet = usePriorityConnector();
 
   return (
+    
     <DisconnectBtn onClick={() => wallet.deactivate()}>
         Disconnect Wallet 
     </DisconnectBtn>

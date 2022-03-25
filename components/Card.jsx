@@ -32,8 +32,7 @@ function Card(props) {
 
     try {
       props.getActiveSaleEvent()
-      // const accounts = await web3.eth.getAccounts();
-      props.refreshInventory()
+
       await props.checkIfWhiteListed()
       const boyContract = getContract(account, provider)
 
@@ -41,29 +40,10 @@ function Card(props) {
         await boyContract.preSaleMint(props.saleEventNumber, props.tokenId, {
           value: ethers.utils.parseEther(props.price.toString()),
         })
-        // .on('transactionHash', () => {
-        //   setIsSigning(true)
-        // })
-
-        // await instance.methods
-        //   .preSaleMint(props.saleEventNumber, props.tokenId)
-        //   .send({
-        //     from: props.account,
-        //     value: web3.utils.toWei(props.price.toString(), "ether"),
-        //   })
-        //   .on("transactionHash", () => {
-        //     setIsSigning(true);
-        //   });
       } else if (!props.isPreSale && props.isPublicSale) {
-        await instance.methods
-          .publicMint(props.saleEventNumber, props.tokenId)
-          .send({
-            from: accounts[0],
-            value: web3.utils.toWei(props.price.toString(), 'ether'),
-          })
-          .on('transactionHash', () => {
-            setIsSigning(true)
-          })
+        await boyContract.publicMint(props.saleEventNumber, props.tokenId, {
+          value: ethers.utils.parseEther(props.price.toString()),
+        })
       }
       if (!showMintResult) {
         setShowMintResult(true)
@@ -80,7 +60,8 @@ function Card(props) {
   }
 
   const formatErrorMessage = () => {
-    if (errorMessage.includes('Mint Limit Reached')) return 'Mint Limit Reached'
+    if (errorMessage.includes('Mint Limit Reached')) 
+      return 'Mint Limit Reached'
     else if (errorMessage.includes('insufficient funds'))
       return 'Insufficient Funds'
     else if (errorMessage.includes('MetaMask Tx Signature:'))
