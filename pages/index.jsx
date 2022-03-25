@@ -60,7 +60,13 @@ function App(props) {
   useEffect(() => {
     metaMask.connectEagerly()
     coinbaseWallet.connectEagerly()
+    walletConnect.connectEagerly()
   }, [])
+
+  // useEffect(() => {
+  //   if(!isConnected)
+  //     walletConnect.deactivate()
+  // }, [isConnected])
 
   useEffect(() => {
     checkChainBeforeContractInteraction()

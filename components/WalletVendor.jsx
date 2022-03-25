@@ -62,24 +62,6 @@ function WalletVendor({
   closeModal,
 }) {
   
-  //Setting all hooks to values
-  const chainId = metaHooks.useChainId();
-  const accounts = metaHooks.useAccounts();
-  // const error = useError();
-  // const isActivating = useIsActivating();
-  const isActive = metaHooks.useIsActive();
-  const provider = metaHooks.useProvider();
-  // const ENSNames = useENSNames(provider);
-
-  //attempts to connect eagerly on mount
-  useEffect(() => {
-    // metaMask.connectEagerly();
-    // coinbaseWallet.connectEagerly(); 
-  }, []);
-
-  useEffect(() => {
-    console.log(isActive)
-  }, [isActive])
 
   const propmtUser = async () => {
     
@@ -92,7 +74,6 @@ function WalletVendor({
       coinbaseWallet.activate(1)
     if(vendor === "WalletConnect")
       walletConnect.activate(1)
-
 
     closeModal();
   };
