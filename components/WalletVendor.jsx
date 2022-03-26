@@ -62,8 +62,13 @@ function WalletVendor({
     const vendor = vendorName.trim().replace(" ", "");
 
     //Where activation occurs
-    if (vendor === "Metamask")
+    if (vendor === "Metamask"){
+      typeof window !== "undefined" && window.ethereum 
+      ?  
       metaMask.activate(1)
+      :
+      window.open('https://metamask.app.link/dapp/shop.booksofye.com/', "_blank")
+    }
     if(vendor === "Coinbase")
       coinbaseWallet.activate(1)
     if(vendor === "WalletConnect")

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 
-import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 import ReactModal from 'react-modal'
 import WalletVendor from './WalletVendor'
@@ -87,9 +86,7 @@ const ConnectButton = styled.div`
 
 function WalletModal(props) {
   const [modalIsOpen, setModalIsOpen] = useState(false)
-
-
-
+  
   useEffect(() => {
     metaMask.connectEagerly()
   }, [])
@@ -139,9 +136,7 @@ function WalletModal(props) {
           <WalletVendor
             vendorName="Metamask"
             darkMode={props.darkMode}
-            imageUrl={
-              'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg'
-            }
+            imageUrl={'./metafox.svg.png'}
             closeModal={handleCloseModal}
           />
           <WalletVendor
