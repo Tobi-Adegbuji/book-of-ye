@@ -21,17 +21,14 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
 
     SaleEvent[] saleEvents;
     uint256[] public mintedCards;
-    uint256 airdropInventory = 1000;
-    uint256 public maxSupply = 5000;
+
+    uint256 public maxSupply = 1000;
     uint256 public mintLimit = 8;
-    bool public airdropActive = false;
     string public baseURI;
 
     mapping(uint256 => string) private _URIS;
     mapping(address => uint256) public cardPurchaseTracker;
     mapping(address => bool) private luckTracker;
-
-
 
     constructor() ERC1155(baseURI) {
         SaleEvent storage saleEvent1 = saleEvents.push();
@@ -42,24 +39,6 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     }
 
     //Public Functions
-    function airdropClaimMint(uint256 cardId) external{
-        uint256 _maxSupply = maxSupply;
-        uint256 _airdropInventory = airdropInventory;
-        uint256 minCardId = 0;
-        uint256 maxCardId = 999;
-
-        require(tx.origin == msg.sender, "No Proxy Contracts");
-        require (airdropActive = true, "Airdrop is not active");
-        require(airdropInventory - 1 >= 0, "No cards to claim");
-        require(!exists(cardId), "Card is already minted");
-        
-        _mint(msg.sender, cardId, 1, "");
-        maxSupply = _maxSupply - 1;
-        airdropInventory = _airdropInventory -1;
-        mintedCards.push(cardId);
-
-
-    }
 
     function preSaleMint(uint256 eventNumber, uint256 cardId) external payable {
         uint256 price = saleEvents[eventNumber].price;
@@ -67,25 +46,35 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         uint256 minCardId = saleEvents[eventNumber].minCardId;
         uint256 maxCardId = saleEvents[eventNumber].maxCardId;
 
-        require(saleEvents[eventNumber].whitelist[msg.sender],"You Aren't On The Whitelist");
+        require(
+            saleEvents[eventNumber].whitelist[msg.sender],
+            "You Aren't On The Whitelist"
+        );
         require(tx.origin == msg.sender, "No Proxy Contracts");
         require(saleEvents[eventNumber].isActive, "Sale Is Not Active");
-        require(saleEvents[eventNumber].isPreSale && !saleEvents[eventNumber].isPublicSale, "PreSale Not Live");
-        require(cardId >= minCardId && cardId <= maxCardId, "Card Not For Sale");
+        require(
+            saleEvents[eventNumber].isPreSale &&
+                !saleEvents[eventNumber].isPublicSale,
+            "PreSale Not Live"
+        );
+        require(
+            cardId >= minCardId && cardId <= maxCardId,
+            "Card Not For Sale"
+        );
         require(_maxSupply - 1 >= 0, "Sold Out");
         require(!exists(cardId), "Card Is Already Minted");
-        require(cardPurchaseTracker[msg.sender] != mintLimit,"Mint Limit Reached");
+        require(
+            cardPurchaseTracker[msg.sender] != mintLimit,
+            "Mint Limit Reached"
+        );
         require(msg.value >= price, "Not Enough Ether Sent");
 
         _mint(msg.sender, cardId, 1, "");
 
-
         maxSupply = _maxSupply - 1;
         cardPurchaseTracker[msg.sender] = cardPurchaseTracker[msg.sender] + 1;
         mintedCards.push(cardId);
-        
-        
-}
+    }
 
     function publicMint(uint256 eventNumber, uint256 cardId) external payable {
         uint256 price = saleEvents[eventNumber].price;
@@ -95,17 +84,29 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
 
         require(tx.origin == msg.sender, "No Proxy Contracts");
         require(saleEvents[eventNumber].isActive, "Sale Is Not Active");
-        require(!saleEvents[eventNumber].isPreSale && saleEvents[eventNumber].isPublicSale, "Public Not Live");
+        require(
+            !saleEvents[eventNumber].isPreSale &&
+                saleEvents[eventNumber].isPublicSale,
+            "Public Not Live"
+        );
+        require(
+            cardId >= minCardId && cardId <= maxCardId,
+            "Card Not For Sale"
+        );
         require(_maxSupply - 1 >= 0, "Sold Out");
-        require(cardId >= minCardId && cardId <= maxCardId,"Card Not For Sale");
         require(!exists(cardId), "Card Is Already Minted");
-        require(cardPurchaseTracker[msg.sender] != mintLimit,"Mint Limit Reached");
+        require(
+            cardPurchaseTracker[msg.sender] != mintLimit,
+            "Mint Limit Reached"
+        );
         require(msg.value >= price, "Not Enough Ether Sent");
 
         _mint(msg.sender, cardId, 1, "");
 
+        maxSupply = _maxSupply - 1;
+        cardPurchaseTracker[msg.sender] = cardPurchaseTracker[msg.sender] + 1;
+        mintedCards.push(cardId);
     }
-
 
     function checkWhitelist(uint256 eventNumber, address _address)
         external
@@ -116,8 +117,11 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         return isUserWL;
     }
 
-
-    function viewMintedCards() external view returns (uint256[] memory allMintedCards){
+    function viewMintedCards()
+        external
+        view
+        returns (uint256[] memory allMintedCards)
+    {
         allMintedCards = mintedCards;
         return allMintedCards;
     }
@@ -125,33 +129,30 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     //Only Owner Functions
 
     function setPriceAndInventory() external onlyOwner {
-        
-        saleEvents[0].price = 100000000000000000;
-        saleEvents[1].price = 100000000000000000;
-        saleEvents[2].price = 100000000000000000;
-        saleEvents[3].price = 100000000000000000;
-        saleEvents[4].price = 100000000000000000;
+        saleEvents[0].price = 200000000000000000;
+        saleEvents[1].price = 600000000000000000;
+        saleEvents[2].price = 1800000000000000000;
+        saleEvents[3].price = 5400000000000000000;
+        saleEvents[4].price = 16200000000000000000;
         saleEvents[0].minCardId = 0;
-        saleEvents[1].minCardId = 1000;
-        saleEvents[2].minCardId = 2000;
-        saleEvents[3].minCardId = 3000;
-        saleEvents[4].minCardId = 4000;
-        saleEvents[0].maxCardId = 999;
-        saleEvents[1].maxCardId = 1999;
-        saleEvents[2].maxCardId = 2999;
-        saleEvents[3].maxCardId = 3999;
-        saleEvents[4].maxCardId = 4999;
-
-       
+        saleEvents[1].minCardId = 200;
+        saleEvents[2].minCardId = 400;
+        saleEvents[3].minCardId = 600;
+        saleEvents[4].minCardId = 800;
+        saleEvents[0].maxCardId = 199;
+        saleEvents[1].maxCardId = 399;
+        saleEvents[2].maxCardId = 599;
+        saleEvents[3].maxCardId = 799;
+        saleEvents[4].maxCardId = 999;
     }
 
-    function batchGiftMint(
-        address[] memory _addresses,
-        uint256[] memory cardId
-    ) external onlyOwner {
+    function batchGiftMint(address[] memory _addresses, uint256[] memory cardId)
+        external
+        onlyOwner
+    {
         for (uint256 i = 0; i < _addresses.length; i++) {
             require(
-                cardId[i] < 5000,
+                cardId[i] < 1000,
                 "The Card Number Selected Does Not Exist"
             );
             require(
@@ -175,11 +176,11 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         uint256 _newMax
     ) external onlyOwner {
         require(
-            _newMin >= 0 && _newMin < 4999,
-            "Your new minimum is either below 0 or over 4999"
+            _newMin >= 0 && _newMin < 999,
+            "Your new minimum is either below 0 or over 999"
         );
         require(
-            _newMax >= 0 && _newMax < 4999,
+            _newMax >= 0 && _newMax < 999,
             "Your new maximum is either below 0 or over 999"
         );
         require(
@@ -225,14 +226,7 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         isPublicSale = saleEvents[eventNumber].isPublicSale;
         minCardId = saleEvents[eventNumber].minCardId;
         maxCardId = saleEvents[eventNumber].maxCardId;
-        return (
-            price,
-            isActive,
-            isPreSale,
-            isPublicSale,
-            minCardId,
-            maxCardId
-        );
+        return (price, isActive, isPreSale, isPublicSale, minCardId, maxCardId);
     }
 
     function editSalePrice(uint256 eventNumber, uint256 _newPriceInWei)
@@ -249,7 +243,6 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     ) external onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             saleEvents[eventNumber].whitelist[_addresses[i]] = true;
-            
         }
     }
 
@@ -263,7 +256,6 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
                 "One of these users is already not on WL. Use the Check WhiteList function to solve"
             );
             saleEvents[eventNumber].whitelist[_addresses[i]] = false;
-        
         }
     }
 
