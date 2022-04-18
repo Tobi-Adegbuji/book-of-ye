@@ -123,6 +123,14 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     }
 
     //Only Owner Functions
+    
+     function presaleRootNodeChange() external onlyOwner {
+
+    }
+
+    function airdropRootNodeChange() external onlyOwner {
+        
+    }
 
     function setPriceAndInventory() external onlyOwner {
         
