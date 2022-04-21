@@ -36,7 +36,10 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
 
 
 
-    constructor() ERC1155(baseURI) {
+    constructor(bytes32 _root) ERC1155(baseURI) {
+
+        root = _root;
+
         SaleEvent storage saleEvent1 = saleEvents.push();
         SaleEvent storage saleEvent2 = saleEvents.push();
         SaleEvent storage saleEvent3 = saleEvents.push();
