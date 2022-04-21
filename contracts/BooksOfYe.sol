@@ -63,6 +63,7 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
             _cardids.push(airdropIdCounter);
             airdropIdCounter++;
         }
+
         freeMint(msg.sender, _cardids);
         maxSupply = _maxSupply - _cardids.length;
         airdropInventory = _airdropInventory - _cardids.length;
@@ -72,9 +73,6 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
 
     }
 
-    function isValid(bytes32[] memory proof, bytes32 leaf) private view returns (bool){ 
-        return MerkleProof.verify(proof, root, leaf); 
-    }
 
     function preSaleMint(uint256 eventNumber, uint256 cardId, bytes32[] memory proof) external payable {
         
@@ -321,6 +319,34 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
             string(
                 abi.encodePacked(baseURI, Strings.toString(_tokenId), ".json")
             );
+    }
+
+     function isValid(bytes32[] memory proof, bytes32 leaf) private view returns (bool){ 
+        return MerkleProof.verify(proof, root, leaf); 
+    }
+
+    function freeMint(
+        address _address,
+        uint256[] memory cardId
+    ) private {
+        for (uint256 i = 0; i < cardId.length; i++) {
+            require(
+                cardId[i] < 5000,
+                "The Card Number Selected Does Not Exist"
+            );
+            require(
+                maxSupply - cardId.length >= 0,
+                "Sorry, There Aren't Anymore Available Cards"
+            );
+            require(
+                !exists(cardId[i]),
+                "A Card Selected Already Belongs To Someone Else"
+            );
+
+            _mint(_address, cardId[i], 1, "0x");
+            maxSupply = maxSupply - cardId.length;
+            mintedCards.push(cardId[i]);
+        }
     }
 
     function _beforeTokenTransfer(
