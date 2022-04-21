@@ -48,21 +48,28 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     }
 
     //Public Functions
-    function airdropClaimMint(uint256 cardId) external{
+     function airdropClaimMint(uint256[] memory cardIds) external{
         uint256 _maxSupply = maxSupply;
         uint256 _airdropInventory = airdropInventory;
-        uint256 minCardId = 0;
-        uint256 maxCardId = 999;
+        uint256 bonusMintAmount = cardIds.length * 5;
+        uint256[] memory _cardids = new uint[](cardIds + bonusMintAmount);
 
-        require(tx.origin == msg.sender, "No Proxy Contracts");
         require (airdropActive = true, "Airdrop is not active");
-        require(airdropInventory - 1 >= 0, "No cards to claim");
-        require(!exists(cardId), "Card is already minted");
+        // require merkle tree check here
+
+        require(airdropInventory - _cardids.length >= 0, "No cards to claim");
         
-        _mint(msg.sender, cardId, 1, "");
-        maxSupply = _maxSupply - 1;
-        airdropInventory = _airdropInventory -1;
-        mintedCards.push(cardId);
+        for (uint256 i = 0; i < bonusMintAmount; i++){
+            _cardids.push(airdropIdCounter);
+            airdropIdCounter++;
+        }
+        freeMint(msg.sender, _cardids);
+        maxSupply = _maxSupply - _cardids.length;
+        airdropInventory = _airdropInventory - _cardids.length;
+        claimedAirdrop[msg.sender] = true;
+        // figure out how to do this - mintedCards.push(cardIds);
+
+
     }
 
     function isValid(bytes32[] memory proof, bytes32 leaf) private view returns (bool){ 
