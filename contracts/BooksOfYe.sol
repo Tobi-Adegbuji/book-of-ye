@@ -25,6 +25,7 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     SaleEvent[] saleEvents;
     uint256[] public mintedCards;
     uint256 airdropInventory = 1000;
+    uint256 airdropIdCounter = 200;
     uint256 public maxSupply = 5000;
     uint256 public mintLimit = 8;
     bool public airdropActive = false;
@@ -33,6 +34,7 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     mapping(uint256 => string) private _URIS;
     mapping(address => uint256) public cardPurchaseTracker;
     mapping(address => bool) private luckTracker;
+    mapping(address => bool) private claimedAirdrop;
 
 
 
@@ -52,11 +54,10 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         uint256 _maxSupply = maxSupply;
         uint256 _airdropInventory = airdropInventory;
         uint256 bonusMintAmount = cardIds.length * 5;
-        uint256[] memory _cardids = new uint[](cardIds + bonusMintAmount);
+        uint256[] memory _cardids;
 
         require (airdropActive = true, "Airdrop is not active");
         // require merkle tree check here
-
         require(airdropInventory - _cardids.length >= 0, "No cards to claim");
         
         for (uint256 i = 0; i < bonusMintAmount; i++){
