@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
     struct SaleEvent {
@@ -19,6 +20,8 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         mapping(address => bool) whitelist;
     }
 
+    //TODO: Ensure only owner can change root
+    bytes32 public root; 
     SaleEvent[] saleEvents;
     uint256[] public mintedCards;
     uint256 airdropInventory = 1000;
@@ -57,11 +60,16 @@ contract BooksOfYe is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply {
         maxSupply = _maxSupply - 1;
         airdropInventory = _airdropInventory -1;
         mintedCards.push(cardId);
-
-
     }
 
-    function preSaleMint(uint256 eventNumber, uint256 cardId) external payable {
+    function isValid(bytes32[] memory proof, bytes32 leaf) private view returns (bool){ 
+        return MerkleProof.verify(proof, root, leaf); 
+    }
+
+    function preSaleMint(uint256 eventNumber, uint256 cardId, bytes32[] memory proof) external payable {
+        
+        require(isValid(proof, keccak256(abi.encodePacked(msg.sender))), "Not a part of whitelist");
+
         uint256 price = saleEvents[eventNumber].price;
         uint256 _maxSupply = maxSupply;
         uint256 minCardId = saleEvents[eventNumber].minCardId;
