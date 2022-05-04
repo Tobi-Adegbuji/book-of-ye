@@ -65,14 +65,14 @@ function WalletVendor({
     if (vendor === "Metamask"){
       typeof window !== "undefined" && window.ethereum 
       ?  
-      metaMask.activate(1)
+      metaMask.activate(4)
       :
       window.open('https://metamask.app.link/dapp/shop.booksofye.com/', "_blank")
     }
     if(vendor === "Coinbase")
-      coinbaseWallet.activate(1)
+      coinbaseWallet.activate(4)
     if(vendor === "WalletConnect")
-      walletConnect.activate(1)
+      walletConnect.activate(4)
 
     closeModal();
   };

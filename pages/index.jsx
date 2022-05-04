@@ -1,8 +1,8 @@
-import Card from '../components/Card'
 import { useEffect, useState } from 'react'
 import cardInfo from '../utils/cardData'
 import instance from '../utils/BooksOfYeContract'
 import styles from '../styles/App.module.css'
+import styled from 'styled-components';
 import Tab from '../components/Tab'
 import Layout from '../components/Layout'
 import web3 from '../utils/web3'
@@ -12,8 +12,10 @@ import { metaHooks, metaMask } from '../components/connectors/Metamask'
 import { getPriorityConnector } from '@web3-react/core'
 import Countdown from 'react-countdown'
 import WalletModal from '../components/WalletModal'
+import AirdropMintBox from '../components/airdropCards'
 import DisconnectButton from '../components/DisconnectButton'
 import { getContract } from '../utils/BoyContract'
+import { BlockForkEvent } from '@ethersproject/abstract-provider'
 
 
 function App(props) {
@@ -21,25 +23,17 @@ function App(props) {
     props.tokensLeft ? props.tokensLeft : '???'
   )
   const [saleEvent, setSaleEvent] = useState({})
-  const [cards, setCards] = useState([])
   const [isWhiteListed, setIsWhiteListed] = useState(false)
-  const storeChainId = 1
+  const storeChainId = 4
   const metamaskActive = metaHooks.useIsActive();
+  const airdropActive = false;
 
-  const cardName = [
-    'Let There Be Light',
-    'Garden Of Eden',
-    "Noah's Ark",
-    'The Tower Of Babel',
-    "Lot's Wife",
-  ]
-  const bookPassage = [
-    'Genesis 1:3',
-    'Genesis 1:27',
-    'Genesis 7:1',
-    'Genesis 11:19',
-    'Genesis 19:26',
-  ]
+  const [cardsToMint, setCardsToMint] = useState(0);
+  const [tokenModal, setTokenModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [mintWasSuccessful, setMintWasSuccessful] = useState(false)
+  const [showMintResult, setShowMintResult] = useState(false)
+  const [isSigning, setIsSigning] = useState(false)
 
   const {
     usePriorityAccount,
@@ -60,6 +54,8 @@ function App(props) {
     metaMask.connectEagerly()
     coinbaseWallet.connectEagerly()
     walletConnect.connectEagerly()
+    console.log(cardsToMint);
+    console.log(airdropActive);
   }, [])
 
   useEffect(() => {
@@ -69,7 +65,6 @@ function App(props) {
   const checkChainBeforeContractInteraction = async () => { 
     if (chainId === storeChainId) {
       getActiveSaleEvent()
-      refreshInventory()
       checkIfWhiteListed()
     }
   }
@@ -99,58 +94,7 @@ function App(props) {
       sum += array.length
     })
     setAmountLeft(sum)
-  }
-
-  const refreshInventory = async () => {
-    //Get Minted Ids
-    const ids = await instance.methods.viewMintedCards().call()
-
-    //Remove the minted Ids from cardInfo arrays
-    for (let i = 0; i < cardInfo.length; i++) {
-      ids.forEach((mintedId) => {
-        const id = parseInt(mintedId)
-        if (cardInfo[i].includes(id)) {
-          for (let j = 0; j < cardInfo[i].length; j++) {
-            if (cardInfo[i][j] === id) {
-              cardInfo[i].splice(j, 1)
-            }
-          }
-        }
-      })
-    }
-
-    const cardProps = []
-
-    const colorways = ['gold', 'platinum', 'crimson', 'cobalt']
-
-    let cardRow = []
-
-    for (let i = 0, j = 0; i < cardInfo.length; i++, j++) {
-      if (j == 4) {
-        j = 0
-        cardProps.push(cardRow)
-        cardRow = []
-      }
-
-      const randIndex = Math.floor(Math.random() * cardInfo[i].length - 1) + 1
-
-      const card = {
-        tokenId: cardInfo[i][0] == undefined ? -1 : cardInfo[i][randIndex],
-        img: `${i}.png`,
-        color: colorways[j],
-        amount: cardInfo[i].length,
-      }
-
-      cardRow.push(card)
-
-      if (i === cardInfo.length - 1) {
-        cardProps.push(cardRow)
-      }
-    }
-
-    setCards(cardProps)
-    getTotalTokens()
-  }
+  }  
 
   const checkIfWhiteListed = async () => {
     
@@ -162,42 +106,67 @@ function App(props) {
     window.location.reload()
   }
 
+  const mintClick = async () => {
+    const account = usePriorityAccount();
+
+    try {
+      const boyContract = getContract(account, provider)
+
+      if (isWhiteListed && isPreSale) {
+        await boyContract.preSaleMint(saleEvent.saleEventNumber, 1, {
+          value: ethers.utils.parseEther(props.price.toString()),
+        })
+      } else if (!isPreSale && isPublicSale) {
+        await boyContract.publicMint(saleEvent.saleEventNumber, 1, {
+          value: ethers.utils.parseEther(props.price.toString()),
+        })
+      }
+      if (!showMintResult) {
+        setShowMintResult(true)
+        setMintWasSuccessful(true)
+      }
+    } catch (e) {
+      console.error(e)
+      setErrorMessage(e.message)
+      if (!showMintResult) {
+        setShowMintResult(true)
+        setMintWasSuccessful(false)
+      }
+    }
+  }
+
   const displayCards = (
     <div className={styles.App}>
       {metamaskActive ? null : <DisconnectButton /> }
-      {cards.map((cardArray, key) => {
-        return (
-          <div key={key} className={styles.cardRow}>
-            <h5 className={styles.bookPassage}>{bookPassage[key]}</h5>
-            <h3 className={styles.cardNames}>{cardName[key]}</h3>
-            <div className={styles.cardContainer}>
-              {cardArray.map((card) => {
-                return (
-                  <Card
-                    account={account}
-                    key={card.tokenId}
-                    refreshInventory={refreshInventory}
-                    tokenId={card.tokenId}
-                    img={card.img}
-                    color={card.color}
-                    cardName={cardName[key]}
-                    amount={card.amount}
-                    price={saleEvent.price}
-                    checkIfWhiteListed={checkIfWhiteListed}
-                    isWhiteListed={isWhiteListed}
-                    isPreSale={saleEvent.isPreSale}
-                    isPublicSale={saleEvent.isPublicSale}
-                    saleEventNumber={saleEvent.saleEventNumber}
-                    getActiveSaleEvent={getActiveSaleEvent}
-                  />
-                )
-              })}
-            </div>
+      <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
+      <div className={styles.quantityContainer}>
+        <form>
+          <div style={{marginLeft: "auto", marginRight: "auto"}}>
+            <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
+            <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
+            <button className={styles.qtyButton} id="3" type="button" value="3" onClick={() => setCardsToMint(3)}>3</button>
+            <button className={styles.qtyButton} id="4" type="button" value="4" onClick={() => setCardsToMint(4)}>4</button>
+            <button className={styles.qtyButton} id="5" type="button" value="5" onClick={() => setCardsToMint(5)}>5</button>
+            <button className={styles.qtyButton} id="6" type="button" value="6" onClick={() => setCardsToMint(6)}>6</button>
+            <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
+            <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
           </div>
-        )
-      })}
+          <button className={styles.mintButton} type="submit" onSubmit={() => mintClick()}>Mint Exodus Card</button>
+        </form>
+      </div>
     </div>
   )
+
+  const displayAirdropScreen = (
+    <div className={styles.App}>
+      {metamaskActive ? null : <DisconnectButton /> }
+      <h1 className={styles.welcomeScreenText}></h1>
+
+    </div>
+  )
+
+  const isOnAirdrop = () => {
+  }
 
   const displayConnectScreen = (
     <div className={styles.welcomeScreen}>
@@ -213,7 +182,65 @@ function App(props) {
     const isPublicSale = saleEvent.isPublicSale
 
     if (isConnected && chainId === storeChainId) {
-      if (!isPreSale && !isPublicSale) {
+    // IS AIRDROP ACTIVE AND PUBLIC/PRESALE IS OFF
+      if (airdropActive && isPublicSale && !isPreSale ) {
+      const genesisCards = async () => { await instance.methods.balanceOf(account).call();}
+
+      const claimedAirdrop = async () => { await instance.methods.claimedReimbursement(account).call();
+      return console.log()
+      }
+      //Users that have Genesis cards to claim and have not yet
+      if (claimedAirdrop){
+        return (
+          <>
+            <div className={styles.airdropContainer}>
+              <h1 className={styles.airdropScreenText}>
+                Press below to claim your cards.
+              </h1>
+              <p className={styles.airdropSubText}>When signing the transaction, cards from the new contract will be minted to your wallet 
+              <br></br>according to the new multiples.</p>
+              <AirdropMintBox></AirdropMintBox>
+
+            </div>
+            ;
+          </>
+        )
+      } 
+      //Users that have Genesis cards but have claimed airdrop already
+      else if (!claimedAirdrop){
+        return (
+          <>
+            <div className={styles.airdropContainer}>
+              <h1 className={styles.airdropScreenText}>
+                Your cards have been claimed.
+              </h1>
+              <p className={styles.airdropSubText}>Please check your wallet. </p>
+              <DisconnectButton/>
+
+            </div>
+            ;
+          </>
+        )
+      } 
+      //Users that have 0 Genesis cards
+      else if (!claimedAirdrop){
+        return (
+          <>
+            <div className={styles.airdropContainer}>
+              <p style={{fontFamily: "Inter", fontSize:"10px"}} className={styles.airdropSubText}>WE'RE SORRY</p>
+              <h1 className={styles.airdropScreenText}>
+              There doesn’t appear to be any Genesis <br></br>cards in this wallet.
+              </h1>
+              <DisconnectButton/>
+
+            </div>
+            ;
+          </>
+        )
+      }
+    }
+    //IF PRESALE AND PUBLIC SALE IS OFF
+    else if (!isPreSale && !isPublicSale) {
         if (isWhiteListed) {
           return (
             <>
@@ -228,7 +255,7 @@ function App(props) {
                   <button onClick={refreshPage}>Enter Sale</button>
                 </Countdown>
               </h1>
-              ;
+              
             </>
           )
         } else if (!isWhiteListed) {
@@ -246,13 +273,79 @@ function App(props) {
             </>
           )
         }
-      } else if (isActive && isPreSale && isWhiteListed) {
-        return displayCards
-      } else if (isActive && isPublicSale && !isPreSale) {
-        return displayCards
-      } else if (
-        (isPreSale && !isPublicSale && !isWhiteListed) ||
-        (isPreSale && isPublicSale && !isWhiteListed)
+    } 
+    //PRE-SALE IS ACTIVE AND ON WL
+    else if (isActive && isPreSale && isWhiteListed) {
+        return (
+        <>
+          <div className={styles.header}>
+            <img className={styles.logo} src={"/logo.png"} alt="" />
+            <div className={styles.videoContainer}>
+              <video autoPlay loop style={{ width: '100%', height: '100%' }}>
+                <source src="/testvideo.mp4" />
+              </video>
+            </div>
+          </div>
+          <div className={styles.App}>
+          {metamaskActive ? null : <DisconnectButton /> }
+            <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
+          <div>
+            <form className={styles.formContainer}>
+              <div className={styles.quantityContainer}>
+                <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
+                <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
+                <button className={styles.qtyButton} id="3" type="button" value="3" onClick={() => setCardsToMint(3)}>3</button>
+                <button className={styles.qtyButton} id="4" type="button" value="4" onClick={() => setCardsToMint(4)}>4</button>
+                <button className={styles.qtyButton} id="5" type="button" value="5" onClick={() => setCardsToMint(5)}>5</button>
+                <button className={styles.qtyButton} id="6" type="button" value="6" onClick={() => setCardsToMint(6)}>6</button>
+                <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
+                <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
+              </div>
+              <button className={styles.mintButton} type="submit" onSubmit={() => mintClick()}>Mint Exodus Card</button>
+            </form>
+          </div>
+          </div>  
+        </>
+        )
+      
+    // PUBLIC SALE IS ACTIVE
+      } 
+    //PUBLIC SALE
+    else if (isActive && isPublicSale && !isPreSale) {
+        return (
+        <>
+        <div className={styles.header}>
+          <img className={styles.logo} src={"/logo.png"} alt="" />
+          <div className={styles.videoContainer}>
+            <video autoPlay loop style={{ width: '100%', height: '100%' }}>
+              <source src="/testvideo.mp4" />
+            </video>
+          </div>
+        </div>
+        <div className={styles.App}>
+        {metamaskActive ? null : <DisconnectButton /> }
+          <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
+        <div>
+          <form className={styles.formContainer}>
+            <div className={styles.quantityContainer}>
+              <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
+              <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
+              <button className={styles.qtyButton} id="3" type="button" value="3" onClick={() => setCardsToMint(3)}>3</button>
+              <button className={styles.qtyButton} id="4" type="button" value="4" onClick={() => setCardsToMint(4)}>4</button>
+              <button className={styles.qtyButton} id="5" type="button" value="5" onClick={() => setCardsToMint(5)}>5</button>
+              <button className={styles.qtyButton} id="6" type="button" value="6" onClick={() => setCardsToMint(6)}>6</button>
+              <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
+              <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
+            </div>
+            <button className={styles.mintButton} type="submit" onSubmit={() => mintClick()}>Mint Exodus Card</button>
+          </form>
+        </div>
+        </div>
+        </>
+        )
+      } 
+    // PRESALE IS ACTIVE AND USER ISNT ON WL
+    else if ((isPreSale && !isPublicSale && !isWhiteListed) || (isPreSale && isPublicSale && !isWhiteListed)
       ) {
         return (
           <>
@@ -266,10 +359,11 @@ function App(props) {
           </>
         )
       }
-    } else {
-      return displayConnectScreen
+    }  
+    else {
+      return displayConnectScreen;
     }
-  }
+  } 
 
   const preSaleOrPublic = () => {
     if (!saleEvent.isPresale && !saleEvent.isPublicSale) {
@@ -284,10 +378,9 @@ function App(props) {
   return (
     <>
       <Layout>
-        <div className={styles.header}>
-          <img className={styles.logo} src={"/logo.png"} alt="" />
-          Please note that there is a limit of 8 Cards per person.
-        </div>
+      <div className={styles.header}>
+        <img className={styles.logo} src={"/logo.png"} alt="" />
+      </div>
         {displayScreen()}
       </Layout>
       <Tab

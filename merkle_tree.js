@@ -5,7 +5,8 @@ const keccak256  = require('keccak256')
  const whitelistAddresses = [
      "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB4",
      "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB5",
-     "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB6"
+     "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB6",
+     "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"
  ]
 
  const leaves = whitelistAddresses.map(addy => keccak256(addy))

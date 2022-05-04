@@ -1,7 +1,6 @@
 .layout{
     max-width: 1875px;
-    width: 90%;
-    margin: auto;
+    width: 100%;
 }
 
 @media only screen and (max-width: 600px) {
@@ -9,6 +8,7 @@
         max-width: 1875px;
         width: 90%;
         margin: auto;
+        margin-top: 0%;
     }
 
 }

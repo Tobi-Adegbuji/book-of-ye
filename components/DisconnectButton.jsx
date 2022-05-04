@@ -7,13 +7,16 @@ import { walletConnect, wcHooks } from './connectors/WalletConnect';
 
 
 const DisconnectBtn = styled.div`
-color: white;
-background-color: black;
-width: fit-content;
-padding: 1em;
+color: black;
+background-color: #F3EEE4;
+width: 225px;
+padding: 2em;
 border-radius: .3em;
 margin-top: 20px;
 cursor: pointer;
+font-size: 7px;
+font-family: "Inter";
+text-align: center;
 `; 
 
 const DisconnectButton = () => {
@@ -25,7 +28,7 @@ const DisconnectButton = () => {
   return (
     
     <DisconnectBtn onClick={() => wallet.deactivate()}>
-        Disconnect Wallet 
+        CONNECT A DIFFERENT WALLET
     </DisconnectBtn>
   )
 }
