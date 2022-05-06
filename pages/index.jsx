@@ -16,7 +16,7 @@ import AirdropMintBox from '../components/airdropCards'
 import DisconnectButton from '../components/DisconnectButton'
 import { getContract } from '../utils/BoyContract'
 import { BlockForkEvent } from '@ethersproject/abstract-provider'
-
+import { getProofForAddress } from '../merkle_tree.js'
 
 function App(props) {
   const [amountLeft, setAmountLeft] = useState(
@@ -97,8 +97,7 @@ function App(props) {
   }  
 
   const checkIfWhiteListed = async () => {
-    
-    const wl = await instance.methods.checkWhitelist(0, account).call()
+    const wl = await instance.methods.checkWhitelist(account, getProofForAddress(account)).call()
     setIsWhiteListed(wl)
   }
 

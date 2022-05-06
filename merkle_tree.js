@@ -17,7 +17,7 @@ const keccak256  = require('keccak256')
 
  //How to get proof: 
 
-//Get leaf you are trying to verify (keccak256 of you addy)
+//Get leaf you are trying to verify (keccak256 of your addy)
 const leaf = keccak256(whitelistAddresses[0])
 console.log("LEAF", buf2Hex(leaf))
 
@@ -31,3 +31,11 @@ console.log("PROOF", proof)
 //contract preSaleMint(eventNumber, cardId, proof).send
 
 //['0x493dcf9eaac9cf6104d9f79efdd145264d2d65663624f60af4069a092cd09b60','0xe5e0d1945f416f9d35401528847e2b4034f7fddc7ef4329e8e9fa03e0b9f8341']
+
+// ["0x493dcf9eaac9cf6104d9f79efdd145264d2d65663624f60af4069a092cd09b60","0x43f505030737a701e99aa05631874a5d505d27178537180804b3eacea5bf1e09"]
+
+
+export const getProofForAddress = (address) => {
+    const leaf = keccak256(address)
+    return tree.getProof(leaf).map(x => buf2Hex(x.data))
+}

@@ -52,6 +52,9 @@ contract BooksOfYe is ERC721A, Ownable {
 
     //Public Functions
     function airdropMint(bytes32[] memory proof) external{
+
+        require(isAirdropValid(proof, keccak256(abi.encodePacked(msg.sender))), "Not a part of whitelist");
+
         uint256 _maxSupply = maxSupply;
         uint256 currentId = totalSupply();
         uint256 maxCardId = saleEvents[0].maxCardId;
@@ -62,13 +65,16 @@ contract BooksOfYe is ERC721A, Ownable {
         require (airdropActive = true, "Not yet active");
         require(!claimedReimbursement[msg.sender], "You've already been reimbursed");
         require(totalSupply() <= _maxSupply, "No more to claim");
-        // require(isAirdropValid(proof, keccak256(abi.encodePacked(msg.sender))), "Not a part of whitelist");
         
         _safeMint(msg.sender, quantity);
         maxSupply = _maxSupply - quantity;
         airdropInventory = _airdropInventory - quantity;
         claimedReimbursement[msg.sender] = true;
         // figure out how to do this - mintedCards.push(cardIds);
+    }
+
+    function checkWhitelist(address sender, bytes32[] memory proof) external view returns (bool){
+        return isPresaleValid(proof, keccak256(abi.encodePacked(sender))); 
     }
 
 
