@@ -1,5 +1,5 @@
-const { MerkleTree } = require('merkletreejs')
-const keccak256  = require('keccak256')
+import { MerkleTree } from 'merkletreejs'
+import keccak256 from 'keccak256'
 
  
  const whitelistAddresses = [
