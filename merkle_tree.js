@@ -6,7 +6,9 @@ import keccak256 from 'keccak256'
      "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB4",
      "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB5",
      "0x0F44Dea529b942578C5306DA7464c6f2c9f67aB6",
-     "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"
+     "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+     "0x1f697F6f79f87D6118882B54892c7Cdf628E8440",
+     "0xa5517354051B46F0F489CD125E217A68115Dd0A9"
  ]
 
  const leaves = whitelistAddresses.map(addy => keccak256(addy))
@@ -39,3 +41,5 @@ export const getProofForAddress = (address) => {
     const leaf = keccak256(address)
     return tree.getProof(leaf).map(x => buf2Hex(x.data))
 }
+
+export default proof;

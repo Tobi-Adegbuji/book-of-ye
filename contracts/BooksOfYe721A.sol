@@ -236,6 +236,11 @@ contract BooksOfYe is ERC721A, Ownable {
         );
     }
 
+    function isReimbursed() public view returns(bool isReimbursed){
+        bool isReimbursed = claimedReimbursement[msg.sender];
+        return isReimbursed;
+    }
+
     function editSalePrice(uint256 eventNumber, uint256 _newPriceInWei)
         external
         onlyOwner
@@ -246,19 +251,6 @@ contract BooksOfYe is ERC721A, Ownable {
 
     function editAirdropStatus(bool isActive) external onlyOwner {
         airdropActive = isActive;
-    }
-    
-    function cardsAvailableToClaim()public view returns (uint256 quantity){
-        uint256 cardsOwned = balanceOf(msg.sender);
-        uint256 quantity = cardsOwned * 5;
-
-        if (!claimedReimbursement[msg.sender]){
-            return quantity;
-        } else if (claimedReimbursement[msg.sender]) {
-            quantity = 0;
-            return quantity;
-        }
-
     }
 
 

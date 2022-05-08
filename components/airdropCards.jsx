@@ -2,6 +2,9 @@ import { getPriorityConnector } from '@web3-react/core';
 import React from 'react';
 import styled from 'styled-components';
 import styles from '../styles/App.module.css';
+import instance from '../utils/BooksOfYeContract'
+import proof from '../merkle_tree';
+import { getProofForAddress } from '../merkle_tree';
 import { cbwHooks, coinbaseWallet } from './connectors/Coinbase';
 import { metaHooks, metaMask } from './connectors/Metamask'
 import { walletConnect, wcHooks } from './connectors/WalletConnect';
@@ -53,20 +56,29 @@ const QtyNumber = styled.h1`
     margin-top: -5px;
 `
 
-const AirdropMintBox = () => {
+const AirdropMintBox = (props) => {
+  const {
+    usePriorityAccount,
+  } = getPriorityConnector(
+    [metaMask, metaHooks],
+    [walletConnect, wcHooks],
+    [coinbaseWallet, cbwHooks]
+  )
+  const account = usePriorityAccount();
 
-    const { usePriorityConnector } = getPriorityConnector([metaMask, metaHooks], [walletConnect, wcHooks], [coinbaseWallet, cbwHooks])
+  const airdropMint = async () => {
+      await instance.methods.airdropMint(getProofForAddress(account)).call(); 
+    }
 
-    const wallet = usePriorityConnector();
 
   return (
     <Container className='airdropContainer'>
-        <ClaimCards onClick={() => wallet.deactivate()}>
+        <ClaimCards onClick={() => airdropMint()}>
             CLAIM CARDS
         </ClaimCards>
         <QtyContainer>
             <QtyText>CARDS TO CLAIM</QtyText>
-            <QtyNumber>6</QtyNumber>
+            <QtyNumber>{props.cardsToClaim}</QtyNumber>
         </QtyContainer>
     </Container>
     

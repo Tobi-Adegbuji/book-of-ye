@@ -17,6 +17,7 @@ import DisconnectButton from '../components/DisconnectButton'
 import { getContract } from '../utils/BoyContract'
 import { BlockForkEvent } from '@ethersproject/abstract-provider'
 import { getProofForAddress } from '../merkle_tree.js'
+import proof from '../merkle_tree.js';
 
 function App(props) {
   const [amountLeft, setAmountLeft] = useState(
@@ -26,14 +27,17 @@ function App(props) {
   const [isWhiteListed, setIsWhiteListed] = useState(false)
   const storeChainId = 4
   const metamaskActive = metaHooks.useIsActive();
-  const airdropActive = false;
 
+  const [airdropActive, setAirdropActive] = useState(false);
   const [cardsToMint, setCardsToMint] = useState(0);
+  const [cardsToClaim, setCardsToClaim] = useState(0);
+  const [airdropClaimed, setAirdropClaimed] = useState(false);
   const [tokenModal, setTokenModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [mintWasSuccessful, setMintWasSuccessful] = useState(false)
   const [showMintResult, setShowMintResult] = useState(false)
   const [isSigning, setIsSigning] = useState(false)
+
 
   const {
     usePriorityAccount,
@@ -54,7 +58,7 @@ function App(props) {
     metaMask.connectEagerly()
     coinbaseWallet.connectEagerly()
     walletConnect.connectEagerly()
-    console.log(cardsToMint);
+    console.log("Cards To Mint",cardsToMint);
     console.log(airdropActive);
   }, [])
 
@@ -66,6 +70,11 @@ function App(props) {
     if (chainId === storeChainId) {
       getActiveSaleEvent()
       checkIfWhiteListed()
+      isAirdropActive()
+      checkCardsToClaim()
+      claimedAirdrop()
+      
+
     }
   }
 
@@ -97,8 +106,50 @@ function App(props) {
   }  
 
   const checkIfWhiteListed = async () => {
-    const wl = await instance.methods.checkWhitelist(account, getProofForAddress(account)).call()
+    const wl = await instance.methods.checkWhitelist(account, getProofForAddress(account)).call();
     setIsWhiteListed(wl)
+  }
+
+  const isAirdropActive = async () => {
+    const airdropOn = await instance.methods.airdropActive.call();
+    if (airdropOn){
+      setAirdropActive(true);
+    } else {
+      setAirdropActive(false);
+    }
+  }
+
+  const checkCardsToClaim = async () => { 
+      try{
+      console.log("account", account);
+      const cards = await instance.methods.balanceOf(account).call();
+      const quantity = cards * 5;
+      console.log("Cards to claim:" + quantity);
+  
+      if (quantity > 0){
+        setCardsToClaim(quantity);
+      } else  {
+        setCardsToClaim(0);
+      }
+      return quantity;
+    }
+    catch (e){
+      console.log(e.message);
+    }
+    
+  }
+
+  const claimedAirdrop = async () => { 
+    const isClaimedAirdrop = await instance.methods.isReimbursed().call();
+    console.log("claimed airdrop:" + isClaimedAirdrop);
+
+    if (isClaimedAirdrop) {
+      setAirdropClaimed(true);
+    } else {
+      setAirdropClaimed(false);
+    }
+    
+    return isClaimedAirdrop;
   }
 
   const refreshPage = () => {
@@ -164,8 +215,7 @@ function App(props) {
     </div>
   )
 
-  const isOnAirdrop = () => {
-  }
+
 
   const displayConnectScreen = (
     <div className={styles.welcomeScreen}>
@@ -182,14 +232,11 @@ function App(props) {
 
     if (isConnected && chainId === storeChainId) {
     // IS AIRDROP ACTIVE AND PUBLIC/PRESALE IS OFF
-      if (airdropActive && isPublicSale && !isPreSale ) {
-      const genesisCards = async () => { await instance.methods.balanceOf(account).call();}
-
-      const claimedAirdrop = async () => { await instance.methods.claimedReimbursement(account).call();
-      return console.log()
-      }
+      
+      if (airdropActive && !isPublicSale && !isPreSale ) {
+      
       //Users that have Genesis cards to claim and have not yet
-      if (claimedAirdrop){
+      if (cardsToClaim > 0){
         return (
           <>
             <div className={styles.airdropContainer}>
@@ -198,7 +245,7 @@ function App(props) {
               </h1>
               <p className={styles.airdropSubText}>When signing the transaction, cards from the new contract will be minted to your wallet 
               <br></br>according to the new multiples.</p>
-              <AirdropMintBox></AirdropMintBox>
+              <AirdropMintBox cardsToClaim={cardsToClaim}></AirdropMintBox>
 
             </div>
             ;
@@ -206,7 +253,7 @@ function App(props) {
         )
       } 
       //Users that have Genesis cards but have claimed airdrop already
-      else if (!claimedAirdrop){
+      else if (airdropClaimed && cardsToClaim > 0){
         return (
           <>
             <div className={styles.airdropContainer}>
@@ -222,7 +269,7 @@ function App(props) {
         )
       } 
       //Users that have 0 Genesis cards
-      else if (!claimedAirdrop){
+      else if (!airdropClaimed && cardsToClaim == 0){
         return (
           <>
             <div className={styles.airdropContainer}>
