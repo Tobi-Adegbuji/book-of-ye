@@ -1,5 +1,5 @@
 import { getPriorityConnector } from '@web3-react/core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import styles from '../styles/App.module.css';
 import instance from '../utils/BooksOfYeContract'
@@ -64,12 +64,6 @@ const AirdropMintBox = (props) => {
     [walletConnect, wcHooks],
     [coinbaseWallet, cbwHooks]
   )
-
-  useEffect(() => {
-    metaMask.connectEagerly()
-    coinbaseWallet.connectEagerly()
-    walletConnect.connectEagerly()
-  }, [])
 
   const account = usePriorityAccount();
 
