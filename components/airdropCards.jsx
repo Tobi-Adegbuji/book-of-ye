@@ -64,6 +64,13 @@ const AirdropMintBox = (props) => {
     [walletConnect, wcHooks],
     [coinbaseWallet, cbwHooks]
   )
+
+  useEffect(() => {
+    metaMask.connectEagerly()
+    coinbaseWallet.connectEagerly()
+    walletConnect.connectEagerly()
+  }, [])
+
   const account = usePriorityAccount();
 
   const airdropMint = async () => {
