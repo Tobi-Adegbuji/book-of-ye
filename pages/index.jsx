@@ -106,8 +106,13 @@ function App(props) {
   }  
 
   const checkIfWhiteListed = async () => {
-    const wl = await instance.methods.checkWhitelist(account, getProofForAddress(account)).call();
+    var wl;
+    if(account === undefined)
+    setIsWhiteListed(false)
+    else{
+    wl = await instance.methods.checkWhitelist(account, getProofForAddress(account)).call();
     setIsWhiteListed(wl)
+    }
   }
 
   const isAirdropActive = async () => {
