@@ -51,7 +51,7 @@ contract BooksOfYe is ERC721A, Ownable {
     }
 
     //Public Functions
-    function airdropMint(bytes32[] memory proof) external{
+    function airdropMint(address sender, bytes32[] memory proof) external{
 
         require(isAirdropValid(proof, keccak256(abi.encodePacked(msg.sender))), "Not a part of whitelist");
 
