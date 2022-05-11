@@ -48,15 +48,15 @@ contract BooksOfYe is ERC721A, Ownable {
         SaleEvent storage saleEvent4 = saleEvents.push();
         SaleEvent storage saleEvent5 = saleEvents.push();
         _safeMint(msg.sender, 200);
+
     }
 
     //Public Functions
     function airdropMint(address sender, bytes32[] memory proof) external{
 
-        require(isAirdropValid(proof, keccak256(abi.encodePacked(msg.sender))), "Not a part of whitelist");
+        require(isAirdropValid(proof, keccak256(abi.encodePacked(sender))), "Not a part of whitelist");
 
         uint256 _maxSupply = maxSupply;
-        uint256 currentId = totalSupply();
         uint256 maxCardId = saleEvents[0].maxCardId;
         uint256 _airdropInventory = airdropInventory;
         uint256 cardsOwned = balanceOf(msg.sender);
@@ -90,7 +90,7 @@ contract BooksOfYe is ERC721A, Ownable {
         require(saleEvents[eventNumber].isActive, "Sale Is Not Active");
         require(saleEvents[eventNumber].isPreSale && !saleEvents[eventNumber].isPublicSale, "PreSale Not Live");
         require(totalSupply() <= maxCardId, "Card Not For Sale");
-        require(quantity + _numberMinted(msg.sender) <= mintLimit,"Mint Limit Reached");
+        require(cardPurchaseTracker[msg.sender] != mintLimit,"Mint Limit Reached");
         require(msg.value >= (price * quantity), "Not Enough Ether Sent");
 
         _safeMint(msg.sender, quantity);
@@ -107,7 +107,7 @@ contract BooksOfYe is ERC721A, Ownable {
         require(saleEvents[eventNumber].isActive, "Sale Is Not Active");
         require(!saleEvents[eventNumber].isPreSale && saleEvents[eventNumber].isPublicSale, "Public Not Live");
         require(currentId <= maxCardId, "Card Not For Sale");
-        require(quantity + _numberMinted(msg.sender) <= mintLimit,"Mint Limit Reached");
+        require(cardPurchaseTracker[msg.sender] != mintLimit,"Mint Limit Reached");
         require(msg.value >= (price * quantity), "Not Enough Ether Sent");
 
         _safeMint(msg.sender, quantity);
@@ -236,11 +236,6 @@ contract BooksOfYe is ERC721A, Ownable {
         );
     }
 
-    function isReimbursed() public view returns(bool isReimbursed){
-        bool isReimbursed = claimedReimbursement[msg.sender];
-        return isReimbursed;
-    }
-
     function editSalePrice(uint256 eventNumber, uint256 _newPriceInWei)
         external
         onlyOwner
@@ -251,6 +246,16 @@ contract BooksOfYe is ERC721A, Ownable {
 
     function editAirdropStatus(bool isActive) external onlyOwner {
         airdropActive = isActive;
+    }
+
+
+    
+    function cardsAvailableToClaim() public view returns (uint256){
+        uint256 cardsOwned = balanceOf(msg.sender);
+        uint256 quantity = cardsOwned * 5;
+        
+        return quantity;
+    
     }
 
 
@@ -290,6 +295,11 @@ contract BooksOfYe is ERC721A, Ownable {
 
     function isPresaleValid(bytes32[] memory proof, bytes32 leaf) private view returns (bool){ 
         return MerkleProof.verify(proof, root2, leaf); 
+    }
+
+    function isReimbursed() public view returns(bool){
+        bool isReimbursed = claimedReimbursement[msg.sender];
+        return isReimbursed;
     }
 
     fallback() external payable {}
