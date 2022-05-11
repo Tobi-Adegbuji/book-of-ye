@@ -68,7 +68,7 @@ const AirdropMintBox = (props) => {
   const account = usePriorityAccount();
 
   const airdropMint = async () => {
-      await instance.methods.airdropMint(getProofForAddress(account)).call(); 
+      await instance.methods.airdropMint(account, [getProofForAddress(account)]).call(); 
     }
 
 

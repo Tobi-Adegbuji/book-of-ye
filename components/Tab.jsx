@@ -1,9 +1,12 @@
 import React from "react";
 import styles from "../styles/Tab.module.css";
 import Countdown from "react-countdown";
-let preSaleDate = new Date("2022-02-28T13:00:00.000-05:00");
-let saleDate = new Date("2022-02-28T19:19:00.000-05:00");
-let saleEndDate = new Date("2022-03-01T19:00:00.000-05:00");
+let airdropStarts = new Date("2022-02-28T13:00:00.000-05:00");
+let airdropEnds = new Date("2022-02-28T13:00:00.000-05:00");
+let presaleStart = new Date("2022-02-28T13:00:00.000-05:00");
+let presaleEnds = new Date("2022-02-28T13:00:00.000-05:00");
+let saleStart = new Date("2022-02-28T19:19:00.000-05:00");
+let saleEnds = new Date("2022-03-01T19:00:00.000-05:00");
 
 
 function Tab(props) {
@@ -19,9 +22,7 @@ function Tab(props) {
           <div className={styles.tabLeft}>
             <div className={styles.cardsRemaining}>
               <p className={styles.headerText}>Cards Remaining</p>
-              <p
-                className={styles.valuesText}
-              >{`${props.amountLeft}/${props.total}`}</p>
+              <p className={styles.valuesText}>{`${props.amountLeft}/${props.total}`}</p>
             </div>
             <div className={styles.ml}>
               <p className={styles.headerText}>Current Price</p>
@@ -36,12 +37,18 @@ function Tab(props) {
             <div className={styles.timeRemaining}>
               <p className={styles.headerText}>Time Remaining</p>
               <p className={styles.valuesText}>
-                <Countdown date={preSaleDate}>
-                    <Countdown date={saleDate}>
-                        <Countdown date={saleEndDate}>
-                            <p className={styles.valuesText}>Sale Is Over!</p>
-                        </Countdown>
+                <Countdown date={airdropStarts}>
+                  <Countdown date={airdropEnds}>
+                    <Countdown date={presaleStart}>
+                      <Countdown date={presaleEnds}>
+                          <Countdown date={saleStart}>
+                              <Countdown date={saleEnds}>
+                                  <p className={styles.valuesText}>Expired</p>
+                              </Countdown>
+                          </Countdown>
+                      </Countdown>
                     </Countdown>
+                  </Countdown>
                 </Countdown>
               </p>
             </div>

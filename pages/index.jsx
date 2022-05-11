@@ -14,21 +14,18 @@ import Countdown from 'react-countdown'
 import WalletModal from '../components/WalletModal'
 import AirdropMintBox from '../components/airdropCards'
 import DisconnectButton from '../components/DisconnectButton'
-import { getContract } from '../utils/BoyContract'
 import { BlockForkEvent } from '@ethersproject/abstract-provider'
+import { getContract } from '../utils/BoyContract'
 import { getProofForAddress } from '../merkle_tree.js'
-import proof from '../merkle_tree.js';
 
 function App(props) {
-  const [amountLeft, setAmountLeft] = useState(
-    props.tokensLeft ? props.tokensLeft : '???'
-  )
+  const [amountLeft, setAmountLeft] = useState()
   const [saleEvent, setSaleEvent] = useState({})
   const [isWhiteListed, setIsWhiteListed] = useState(false)
   const storeChainId = 4
   const metamaskActive = metaHooks.useIsActive();
 
-  const [airdropActive, setAirdropActive] = useState(false);
+  const [airdropActive, setAirdropActive] = useState();
   const [cardsToMint, setCardsToMint] = useState(0);
   const [cardsToClaim, setCardsToClaim] = useState(0);
   const [airdropClaimed, setAirdropClaimed] = useState(false);
@@ -59,7 +56,7 @@ function App(props) {
     coinbaseWallet.connectEagerly()
     walletConnect.connectEagerly()
     console.log("Cards To Mint",cardsToMint);
-    console.log(airdropActive);
+    console.log("Is Airdrop Active?", airdropActive);
   }, [])
 
   useEffect(() => {
@@ -68,16 +65,16 @@ function App(props) {
 
   const checkChainBeforeContractInteraction = async () => { 
     if (chainId === storeChainId) {
+      totalMinted()
       getActiveSaleEvent()
       checkIfWhiteListed()
-      isAirdropActive()
       checkCardsToClaim()
       claimedAirdrop()
-      
-
+      isAirdropActive()
     }
   }
 
+  //Contract Getter Functions
   const getActiveSaleEvent = async () => {
     for (let i = 0; i < 5; i++) {
       const sEvent = await instance.methods.viewSaleStatus(i).call()
@@ -97,14 +94,6 @@ function App(props) {
     }
   }
 
-  const getTotalTokens = () => {
-    let sum = 0
-    cardInfo.forEach((array) => {
-      sum += array.length
-    })
-    setAmountLeft(sum)
-  }  
-
   const checkIfWhiteListed = async () => {
     var wl;
     if(account === undefined)
@@ -116,12 +105,10 @@ function App(props) {
   }
 
   const isAirdropActive = async () => {
-    const airdropOn = await instance.methods.airdropActive.call();
-    if (airdropOn){
-      setAirdropActive(true);
-    } else {
-      setAirdropActive(false);
-    }
+    var isAirdropOn;
+    isAirdropOn = await instance.methods.airdropActive().call();
+    setAirdropActive(isAirdropOn);
+    
   }
 
   const checkCardsToClaim = async () => { 
@@ -144,6 +131,12 @@ function App(props) {
     
   }
 
+  const totalMinted = async () =>{
+    const total = await instance.methods.totalSupply().call();
+    setAmountLeft(total);
+    return total;
+  }
+
   const claimedAirdrop = async () => { 
     const isClaimedAirdrop = await instance.methods.isReimbursed().call();
     console.log("claimed airdrop:" + isClaimedAirdrop);
@@ -161,16 +154,17 @@ function App(props) {
     window.location.reload()
   }
 
-  const mintClick = async () => {
+  const MintClick = async (quantity, proof) => {
     const account = usePriorityAccount();
+    const isActive = saleEvent.isActive
+    const isPreSale = saleEvent.isPreSale
+    const isPublicSale = saleEvent.isPublicSale
 
     try {
       const boyContract = getContract(account, provider)
 
       if (isWhiteListed && isPreSale) {
-        await boyContract.preSaleMint(saleEvent.saleEventNumber, 1, {
-          value: ethers.utils.parseEther(props.price.toString()),
-        })
+        await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, proof, {value: ethers.utils.parseEther(props.price.toString()),})
       } else if (!isPreSale && isPublicSale) {
         await boyContract.publicMint(saleEvent.saleEventNumber, 1, {
           value: ethers.utils.parseEther(props.price.toString()),
@@ -189,7 +183,8 @@ function App(props) {
       }
     }
   }
-
+//
+// Application
   const displayCards = (
     <div className={styles.App}>
       {metamaskActive ? null : <DisconnectButton /> }
@@ -206,7 +201,7 @@ function App(props) {
             <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
             <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
           </div>
-          <button className={styles.mintButton} type="submit" onSubmit={() => mintClick()}>Mint Exodus Card</button>
+          <button className={styles.mintButton} type="submit" onSubmit={() => MintClick()}>Mint Exodus Card</button>
         </form>
       </div>
     </div>
@@ -234,67 +229,75 @@ function App(props) {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
+    const isAirdrop = airdropActive;
+
+    console.log("SCREEN DISPLAY STATUS:", isActive, isPreSale, isPublicSale, airdropActive);
 
     if (isConnected && chainId === storeChainId) {
     // IS AIRDROP ACTIVE AND PUBLIC/PRESALE IS OFF
       
-      if (airdropActive && !isPublicSale && !isPreSale ) {
-      
-      //Users that have Genesis cards to claim and have not yet
-      if (cardsToClaim > 0){
-        return (
-          <>
-            <div className={styles.airdropContainer}>
-              <h1 className={styles.airdropScreenText}>
-                Press below to claim your cards.
-              </h1>
-              <p className={styles.airdropSubText}>When signing the transaction, cards from the new contract will be minted to your wallet 
-              <br></br>according to the new multiples.</p>
-              <AirdropMintBox cardsToClaim={cardsToClaim}></AirdropMintBox>
+      if (!isPreSale && !isPublicSale && isAirdrop) {
+        console.log("AIRDROP IS ACTIVE, PRESALE AND PUBLIC SALE IS NOT")
 
-            </div>
-            ;
-          </>
-        )
-      } 
-      //Users that have Genesis cards but have claimed airdrop already
-      else if (airdropClaimed && cardsToClaim > 0){
-        return (
-          <>
-            <div className={styles.airdropContainer}>
-              <h1 className={styles.airdropScreenText}>
-                Your cards have been claimed.
-              </h1>
-              <p className={styles.airdropSubText}>Please check your wallet. </p>
-              <DisconnectButton/>
-
-            </div>
-            ;
-          </>
-        )
-      } 
-      //Users that have 0 Genesis cards
-      else if (!airdropClaimed && cardsToClaim == 0){
-        return (
-          <>
-            <div className={styles.airdropContainer}>
-              <p style={{fontFamily: "Inter", fontSize:"10px"}} className={styles.airdropSubText}>WE'RE SORRY</p>
-              <h1 className={styles.airdropScreenText}>
-              There doesn’t appear to be any Genesis <br></br>cards in this wallet.
-              </h1>
-              <DisconnectButton/>
-
-            </div>
-            ;
-          </>
-        )
-      }
-    }
-    //IF PRESALE AND PUBLIC SALE IS OFF
-    else if (!isPreSale && !isPublicSale) {
-        if (isWhiteListed) {
+        //Users that have Genesis cards to claim and have not yet
+        if (!airdropClaimed && cardsToClaim > 0){
           return (
             <>
+              <div className={styles.airdropContainer}>
+                <h1 className={styles.airdropScreenText}>
+                  Press below to claim your cards.
+                </h1>
+                <p className={styles.airdropSubText}>When signing the transaction, cards from the new contract will be minted to your wallet 
+                <br></br>according to the new multiples.</p>
+                <AirdropMintBox cardsToClaim={cardsToClaim}></AirdropMintBox>
+
+              </div>
+              ;
+            </>
+          )
+        } 
+        //Users that have Genesis cards but have claimed airdrop already
+        else if (airdropClaimed && cardsToClaim > 0){
+          return (
+            <>
+              <div className={styles.airdropContainer}>
+                <h1 className={styles.airdropScreenText}>
+                  Your cards have been claimed.
+                </h1>
+                <p className={styles.airdropSubText}>Please check your wallet. </p>
+                <DisconnectButton/>
+
+              </div>
+              ;
+            </>
+          )
+        } 
+        //Users that have 0 Genesis cards
+        else if (!airdropClaimed && cardsToClaim == 0){
+          return (
+            <>
+              <div className={styles.airdropContainer}>
+                <p style={{fontFamily: "Inter", fontSize:"10px"}} className={styles.airdropSubText}>WE'RE SORRY</p>
+                <h1 className={styles.airdropScreenText}>
+                There doesn’t appear to be any Genesis <br></br>cards in this wallet.
+                </h1>
+                <DisconnectButton/>
+
+              </div>
+              ;
+            </>
+          )
+        }
+    
+      }
+
+    //IF PRESALE AND PUBLIC SALE IS OFF
+    else if (!airdropActive && !isPreSale && !isPublicSale) {
+        console.log("AIRDROP, PRESALE, AND SALE ISNT ACTIVE")
+
+        if (isWhiteListed) {
+          return (
+            <div style={{width:"90%", marginTop:"18%", marginLeft:"auto", marginRight:"auto"}}>
               <p className={styles.welcomeSubText}>THANK YOU</p>;
               {metamaskActive ? null : <DisconnectButton /> }
               <h1 className={styles.welcomeScreenText}>
@@ -307,9 +310,10 @@ function App(props) {
                 </Countdown>
               </h1>
               
-            </>
+            </div>
           )
-        } else if (!isWhiteListed) {
+        } 
+        else if (!isWhiteListed) {
           return (
             <>
               <p className={styles.welcomeSubText}>THANK YOU</p>
@@ -327,6 +331,7 @@ function App(props) {
     } 
     //PRE-SALE IS ACTIVE AND ON WL
     else if (isActive && isPreSale && isWhiteListed) {
+        console.log("PRESALE IS ACTIVE AND ON WL")
         return (
         <>
           <div className={styles.header}>
@@ -341,7 +346,7 @@ function App(props) {
           {metamaskActive ? null : <DisconnectButton /> }
             <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
           <div>
-            <form className={styles.formContainer}>
+            <div className={styles.formContainer}>
               <div className={styles.quantityContainer}>
                 <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
                 <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
@@ -352,18 +357,19 @@ function App(props) {
                 <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
                 <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
               </div>
-              <button className={styles.mintButton} type="submit" onSubmit={() => mintClick()}>Mint Exodus Card</button>
-            </form>
+              <button className={styles.mintButton} type="submit" onSubmit={() => MintClick(saleEvent, cardsToMint,getProofForAddress(account))}>Mint Exodus Card</button>
+            </div>
           </div>
           </div>  
         </>
         )
-      
-    // PUBLIC SALE IS ACTIVE
       } 
-    //PUBLIC SALE
+
+    // PUBLIC SALE IS ACTIVE
     else if (isActive && isPublicSale && !isPreSale) {
-        return (
+      console.log("SALE EVENT IS ACTIVE, PUBLIC SALE IS ACTIVE, PRESALE IS NOT ACTIVE")
+  
+      return (
         <>
         <div className={styles.header}>
           <img className={styles.logo} src={"/logo.png"} alt="" />
@@ -388,7 +394,7 @@ function App(props) {
               <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
               <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
             </div>
-            <button className={styles.mintButton} type="submit" onSubmit={() => mintClick()}>Mint Exodus Card</button>
+            <button className={styles.mintButton} type="submit" onSubmit={() => MintClick()}>Mint Exodus Card</button>
           </form>
         </div>
         </div>
@@ -398,8 +404,9 @@ function App(props) {
     // PRESALE IS ACTIVE AND USER ISNT ON WL
     else if ((isPreSale && !isPublicSale && !isWhiteListed) || (isPreSale && isPublicSale && !isWhiteListed)
       ) {
+        console.log("PRESALE IS ACTIVE BUT USER IS NOT ON WL")
         return (
-          <>
+          <div style={{width:"90%", marginTop:"18%", marginLeft:"auto", marginRight:"auto"}}>
             {metamaskActive ? null : <DisconnectButton /> }
             <p className={styles.welcomeSubText}>THANK YOU</p>
             <h1 className={styles.welcomeScreenText}>
@@ -407,19 +414,24 @@ function App(props) {
               remaining stock.
             </h1>
             ;
-          </>
+          </div>
         )
       }
     }  
     else {
+      console.log("CONNECT SCREEN")
+
       return displayConnectScreen;
     }
   } 
 
   const preSaleOrPublic = () => {
-    if (!saleEvent.isPresale && !saleEvent.isPublicSale) {
+    if (airdropActive) {
+      return 'Airdrop'
+    } else if (!airdropActive && !saleEvent.isPresale && !saleEvent.isPublicSale){
       return 'Pre-Sale'
-    } else if (saleEvent.isPresale && !saleEvent.isPublicSale) {
+    }
+    else if (saleEvent.isPresale && !saleEvent.isPublicSale) {
       return 'Pre-Sale'
     } else if (!saleEvent.isPresale && saleEvent.isPublicSale) {
       return 'Sale'
@@ -436,12 +448,11 @@ function App(props) {
       </Layout>
       <Tab
         amountLeft={amountLeft}
-        total={200}
+        total={1000}
         price={saleEvent.price}
         stage={preSaleOrPublic()}
       />
     </>
   )
 }
-
 export default App

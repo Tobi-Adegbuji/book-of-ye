@@ -35,14 +35,14 @@
 .welcomeScreen{
   color: #fff;
   padding-left: 4%;
-  padding-top: 20%;
+  padding-top: 25%;
 }
 .welcomeSubText{
   font-family: "Inter";
   font-style: normal;
   font-weight: 600;
   font-size: 10px;
-  margin-bottom: 25px;
+  margin-bottom: 5px;
   color: white;
 
 }
@@ -52,6 +52,7 @@
   font-weight: 400;
   font-size: 42px;
   color: white;
+  line-height: 30px;
 }
 
 

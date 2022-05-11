@@ -39,7 +39,8 @@ console.log("PROOF", proof)
 
 export const getProofForAddress = (address) => {
     const leaf = keccak256(address)
-    return tree.getProof(leaf).map(x => buf2Hex(x.data))
+    const proof = tree.getProof(leaf).map(x => buf2Hex(x.data))
+    return proof
 }
 
 export default proof;
