@@ -1,7 +1,5 @@
-import BooksOfYe from './BooksOfYe.json'
 import BooksOfYeA from "./BooksOfYeA.json";
 import { Contract } from '@ethersproject/contracts'
-import { ethers } from 'ethers'
  
 //721A Rinkeby Contract
  const contractAddress = '0x9d943d50D0814E1f18fA3544F31eBdfaF2D68b4a'

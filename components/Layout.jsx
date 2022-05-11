@@ -4,7 +4,7 @@ import styles from "../styles/Layout.module.css";
 function Layout(props) {
 return  <div className={styles.layout}>
           {props.children}
-        </div>;
+        </div>
 }
 
 export default Layout;
