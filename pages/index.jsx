@@ -27,7 +27,7 @@ function App(props) {
 
   const [airdropActive, setAirdropActive] = useState();
   const [cardsToMint, setCardsToMint] = useState(0);
-  const [cardsToClaim, setCardsToClaim] = useState(0);
+  const [cardsToClaim, setCardsToClaim] = useState();
   const [airdropClaimed, setAirdropClaimed] = useState(false);
   const [tokenModal, setTokenModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -115,15 +115,16 @@ function App(props) {
       try{
       console.log("account", account);
       const cards = await instance.methods.balanceOf(account).call();
+      const claimedCards = await instance.methods.claimedReimbursement(account).call();
       const quantity = cards * 5;
       console.log("Cards to claim:" + quantity);
   
-      if (quantity > 0){
+      if (!cardsToClaim && (quantity > 0)){
         setCardsToClaim(quantity);
-      } else  {
+      } else if(claimedCards)  {
         setCardsToClaim(0);
       }
-      return quantity;
+      return cardsToClaim;
     }
     catch (e){
       console.log(e.message);
@@ -138,7 +139,7 @@ function App(props) {
   }
 
   const claimedAirdrop = async () => { 
-    const isClaimedAirdrop = await instance.methods.isReimbursed().call();
+    const isClaimedAirdrop = await instance.methods.claimedReimbursement(account).call();
     console.log("claimed airdrop:" + isClaimedAirdrop);
 
     if (isClaimedAirdrop) {
@@ -146,7 +147,6 @@ function App(props) {
     } else {
       setAirdropClaimed(false);
     }
-    
     return isClaimedAirdrop;
   }
 

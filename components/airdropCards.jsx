@@ -58,7 +58,7 @@ const TokenModal = styled(ReactModal)`
   color: #ffffff;
   background-color: #181616;
   width: 50%;
-  height: 490px;
+  height: 380px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -101,9 +101,62 @@ const ModalCircleLoader = styled.img`
     }
   }
 `
+const TokenModalHeading = styled.h1`
+  font-family: 'Vaporetta';
+  font-weight:400;
+  font-size: 32px;
+`
+const TokenModalText = styled.h1`
+  font-family: 'Vaporetta';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 10px;
+  width: 70%;
+  text-align: center;
+  font-size: 18px;
+  margin-top: -5px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #D0CDCD;
+
+`
+const ResponseContainer = styled.div`
+    width: 100%;
+    text-align: center;
+
+`
+const ModalStatusImage = styled.img`
+  margin-top: -50px;
+  margin-left: auto;
+  margin-right: auto;
+
+`
+const MessageContainer = styled.div`
+  text-align: center;
+`
+
+const ErrorMessage = styled.p`
+  display: block;
+  font-family: 'Vaporetta';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 10px;
+  width: 70%;
+  text-align: center;
+  font-size: 18px;
+  margin-top: -5px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #D0CDCD;
+`
+
 
 const AirdropMintBox = (props) => {
   const [tokenModal, setTokenModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [mintWasSuccessful, setMintWasSuccessful] = useState(false)
+  const [showMintResult, setShowMintResult] = useState(false)
+  const [isSigning, setIsSigning] = useState(false)
 
   const { usePriorityAccount, usePriorityProvider } = getPriorityConnector(
     [metaMask, metaHooks],
@@ -114,12 +167,40 @@ const AirdropMintBox = (props) => {
   const account = usePriorityAccount()
   const provider = usePriorityProvider()
 
+  const formatErrorMessage = () => {
+    if (errorMessage.includes('Mint Limit Reached')) 
+      return 'Mint Limit Reached'
+    else if (errorMessage.includes('insufficient funds'))
+      return 'Insufficient Funds'
+    else if (errorMessage.includes('reimbursed'))
+      return 'You Have Already Claimed Your Cards'
+    else if (errorMessage.includes('whitelist'))
+      return 'You Are Not On The Whitelist'
+    else if (errorMessage.includes('MetaMask Tx Signature:'))
+      return errorMessage.replace('MetaMask Tx Signature:', '')
+    else
+      return 'Transaction Failed On The Blockchain, Your Purchase Was Reversed'
+  }
+
   const airdropMint = async () => {
     setTokenModal(true)
-
+    try {
     const boyContract = getContract(account, provider)
     await boyContract.airdropMint(account, getProofForAddress(account))
+
+    if (!showMintResult) {
+      setShowMintResult(true)
+      setMintWasSuccessful(true)
+    }
+  } catch(e){
+    setErrorMessage(e.message)
+    if (!showMintResult) {
+      setShowMintResult(true)
+      setMintWasSuccessful(false)
+    }
   }
+}
+
 
   return (
     <>
@@ -141,9 +222,39 @@ const AirdropMintBox = (props) => {
           },
         }}
       >
-        <CloseModelX/>
         <TokenModalImage src={'./unknown-card.png'} />
-      </TokenModal>
+        <CloseModelX src="./close_x.png" 
+        onClick={() => { 
+          setTokenModal(false) 
+          setShowMintResult(false)
+        }}
+        />
+
+        {!showMintResult ? (
+          <ResponseContainer>
+            <ModalCircleLoader src={'./modalCircle.png'}></ModalCircleLoader>
+            <TokenModalHeading>{isSigning ? 'Signing' : 'Please Sign the Transaction'}</TokenModalHeading>
+            <TokenModalText>{isSigning ? '' : 'Note that if the transaction fails on the blockchain, the purchase will be reversed.'}</TokenModalText>  
+          </ResponseContainer>
+        ) : (
+          <ResponseContainer>
+            {mintWasSuccessful ? (
+              <>
+                <ModalStatusImage src="/Checkmark.png"></ModalStatusImage>
+                <TokenModalHeading>Cards Minted</TokenModalHeading>
+              </>
+            ) : (
+              <>
+                <ModalStatusImage src="/failed.png"></ModalStatusImage>
+                <TokenModalHeading>Transaction Failed</TokenModalHeading>
+                <MessageContainer>
+                  <ErrorMessage>{formatErrorMessage()}</ErrorMessage>
+                </MessageContainer>
+              </>
+            )}
+          </ResponseContainer>
+        )}
+        </TokenModal>
     </>
   )
 }
