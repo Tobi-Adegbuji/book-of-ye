@@ -15,8 +15,105 @@ import WalletModal from '../components/WalletModal'
 import AirdropMintBox from '../components/airdropCards'
 import DisconnectButton from '../components/DisconnectButton'
 import { BlockForkEvent } from '@ethersproject/abstract-provider'
+import ReactModal from 'react-modal'
 import { getContract } from '../utils/BoyContract'
 import { getProofForAddress } from '../merkle_tree.js'
+
+const TokenModal = styled(ReactModal)`
+  color: #ffffff;
+  background-color: #181616;
+  width: 50%;
+  height: 380px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-color: #181616;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  word-wrap: break-word;
+`
+
+const TokenModalImage = styled.img`
+  width: 150px;
+  position: relative;
+  left: 0%;
+  top: -15%;
+`
+
+const CloseModelX = styled.img`
+  margin-left: 20px;
+  margin-top: 20px;
+  margin-right: auto;
+  left: 0;
+  top: 0;
+  position: absolute;
+  cursor: pointer;
+`
+
+const ModalCircleLoader = styled.img`
+  margin-top: -50px;
+  animation: rotation 4s infinite linear;
+
+  @keyframes rotation {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(359deg);
+    }
+  }
+`
+const TokenModalHeading = styled.h1`
+  font-family: 'Vaporetta';
+  font-weight:400;
+  font-size: 32px;
+`
+const TokenModalText = styled.h1`
+  font-family: 'Vaporetta';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 10px;
+  width: 70%;
+  text-align: center;
+  font-size: 18px;
+  margin-top: -5px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #D0CDCD;
+
+`
+const ResponseContainer = styled.div`
+    width: 100%;
+    text-align: center;
+
+`
+const ModalStatusImage = styled.img`
+  margin-top: -50px;
+  margin-left: auto;
+  margin-right: auto;
+
+`
+const MessageContainer = styled.div`
+  text-align: center;
+`
+
+const ErrorMessage = styled.p`
+  display: block;
+  font-family: 'Vaporetta';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 10px;
+  width: 70%;
+  text-align: center;
+  font-size: 18px;
+  margin-top: -5px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #D0CDCD;
+`
 
 function App(props) {
   const [amountLeft, setAmountLeft] = useState()
@@ -33,8 +130,7 @@ function App(props) {
   const [errorMessage, setErrorMessage] = useState('')
   const [mintWasSuccessful, setMintWasSuccessful] = useState(false)
   const [showMintResult, setShowMintResult] = useState(false)
-  const [isSigning, setIsSigning] = useState(false)
-
+  const [isSigning, setIsSigning] = useState(false);
 
   const {
     usePriorityAccount,
@@ -50,6 +146,8 @@ function App(props) {
   const account = usePriorityAccount()
   const isConnected = usePriorityIsActive()
   const chainId = usePriorityChainId()
+  const provider = usePriorityProvider()
+
 
   useEffect(() => {
     metaMask.connectEagerly()
@@ -75,6 +173,8 @@ function App(props) {
   }
 
   //Contract Getter Functions
+
+
   const getActiveSaleEvent = async () => {
     for (let i = 0; i < 5; i++) {
       const sEvent = await instance.methods.viewSaleStatus(i).call()
@@ -155,16 +255,15 @@ function App(props) {
   }
 
   const MintClick = async (quantity, proof) => {
-    const account = usePriorityAccount();
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
-
+    
+    setTokenModal(true)
     try {
       const boyContract = getContract(account, provider)
-
       if (isWhiteListed && isPreSale) {
-        await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, proof, {value: ethers.utils.parseEther(props.price.toString()),})
+        await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, getProofForAddress(account), {value: ethers.utils.parseEther(props.price.toString()),})
       } else if (!isPreSale && isPublicSale) {
         await boyContract.publicMint(saleEvent.saleEventNumber, 1, {
           value: ethers.utils.parseEther(props.price.toString()),
@@ -182,6 +281,20 @@ function App(props) {
         setMintWasSuccessful(false)
       }
     }
+  }
+  const formatErrorMessage = () => {
+    if (errorMessage.includes('Mint Limit Reached')) 
+      return 'Mint Limit Reached'
+    else if (errorMessage.includes('insufficient funds'))
+      return 'Insufficient Funds'
+    else if (errorMessage.includes('reimbursed'))
+      return 'You Have Already Claimed Your Cards'
+    else if (errorMessage.includes('whitelist'))
+      return 'You Are Not On The Whitelist'
+    else if (errorMessage.includes('MetaMask Tx Signature:'))
+      return errorMessage.replace('MetaMask Tx Signature:', '')
+    else
+      return 'Transaction Failed On The Blockchain, Your Purchase Was Reversed'
   }
 //
 // Application
@@ -357,8 +470,52 @@ function App(props) {
                 <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
                 <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
               </div>
-              <button className={styles.mintButton} type="submit" onSubmit={() => MintClick(saleEvent, cardsToMint,getProofForAddress(account))}>Mint Exodus Card</button>
+              <button className={styles.mintButton} type="submit" onClick={() => MintClick(cardsToMint, getProofForAddress(account))}>Mint Exodus Card</button>
             </div>
+            <TokenModal
+        isOpen={tokenModal}
+        preventScroll={true}
+        style={{
+          overlay: {
+            zIndex: 1000,
+            backgroundColor: 'black',
+            background: 'rgba(0, 0, 0, 0.9)',
+          },
+        }}
+      >
+        <TokenModalImage src={'./unknown-card.png'} />
+        <CloseModelX src="./close_x.png" 
+        onClick={() => { 
+          setTokenModal(false) 
+          setShowMintResult(false)
+        }}
+        />
+
+        {!showMintResult ? (
+          <ResponseContainer>
+            <ModalCircleLoader src={'./modalCircle.png'}></ModalCircleLoader>
+            <TokenModalHeading>{isSigning ? 'Signing' : 'Please Sign the Transaction'}</TokenModalHeading>
+            <TokenModalText>{isSigning ? '' : 'Note that if the transaction fails on the blockchain, the purchase will be reversed.'}</TokenModalText>  
+          </ResponseContainer>
+        ) : (
+          <ResponseContainer>
+            {mintWasSuccessful ? (
+              <>
+                <ModalStatusImage src="/Checkmark.png"></ModalStatusImage>
+                <TokenModalHeading>Cards Minted</TokenModalHeading>
+              </>
+            ) : (
+              <>
+                <ModalStatusImage src="/failed.png"></ModalStatusImage>
+                <TokenModalHeading>Transaction Failed</TokenModalHeading>
+                <MessageContainer>
+                  <ErrorMessage>{formatErrorMessage()}</ErrorMessage>
+                </MessageContainer>
+              </>
+            )}
+          </ResponseContainer>
+        )}
+        </TokenModal>
           </div>
           </div>  
         </>
