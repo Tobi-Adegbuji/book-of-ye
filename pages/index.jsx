@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import cardInfo from '../utils/cardData'
 import instance from '../utils/BooksOfYeContract'
 import styles from '../styles/App.module.css'
-import styled from 'styled-components';
+import styled from 'styled-components'
 import Tab from '../components/Tab'
 import Layout from '../components/Layout'
 import web3 from '../utils/web3'
@@ -19,7 +19,6 @@ import ReactModal from 'react-modal'
 import { getContract } from '../utils/BoyContract'
 import { getProofForAddress } from '../merkle_tree.js'
 import { ethers } from 'ethers'
-
 
 const TokenModal = styled(ReactModal)`
   color: #ffffff;
@@ -70,7 +69,7 @@ const ModalCircleLoader = styled.img`
 `
 const TokenModalHeading = styled.h1`
   font-family: 'Vaporetta';
-  font-weight:400;
+  font-weight: 400;
   font-size: 32px;
 `
 const TokenModalText = styled.h1`
@@ -84,19 +83,16 @@ const TokenModalText = styled.h1`
   margin-top: -5px;
   margin-left: auto;
   margin-right: auto;
-  color: #D0CDCD;
-
+  color: #d0cdcd;
 `
 const ResponseContainer = styled.div`
-    width: 100%;
-    text-align: center;
-
+  width: 100%;
+  text-align: center;
 `
 const ModalStatusImage = styled.img`
   margin-top: -50px;
   margin-left: auto;
   margin-right: auto;
-
 `
 const MessageContainer = styled.div`
   text-align: center;
@@ -114,7 +110,7 @@ const ErrorMessage = styled.p`
   margin-top: -5px;
   margin-left: auto;
   margin-right: auto;
-  color: #D0CDCD;
+  color: #d0cdcd;
 `
 
 function App(props) {
@@ -122,17 +118,17 @@ function App(props) {
   const [saleEvent, setSaleEvent] = useState({})
   const [isWhiteListed, setIsWhiteListed] = useState(false)
   const storeChainId = 4
-  const metamaskActive = metaHooks.useIsActive();
+  const metamaskActive = metaHooks.useIsActive()
 
-  const [airdropActive, setAirdropActive] = useState();
-  const [cardsToMint, setCardsToMint] = useState(0);
-  const [cardsToClaim, setCardsToClaim] = useState();
-  const [airdropClaimed, setAirdropClaimed] = useState(false);
+  const [airdropActive, setAirdropActive] = useState()
+  const [cardsToMint, setCardsToMint] = useState(0)
+  const [cardsToClaim, setCardsToClaim] = useState()
+  const [airdropClaimed, setAirdropClaimed] = useState(false)
   const [tokenModal, setTokenModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [mintWasSuccessful, setMintWasSuccessful] = useState(false)
   const [showMintResult, setShowMintResult] = useState(false)
-  const [isSigning, setIsSigning] = useState(false);
+  const [isSigning, setIsSigning] = useState(false)
 
   const {
     usePriorityAccount,
@@ -150,20 +146,19 @@ function App(props) {
   const chainId = usePriorityChainId()
   const provider = usePriorityProvider()
 
-
   useEffect(() => {
     metaMask.connectEagerly()
     coinbaseWallet.connectEagerly()
     walletConnect.connectEagerly()
-    console.log("Cards To Mint",cardsToMint);
-    console.log("Is Airdrop Active?", airdropActive);
+    console.log('Cards To Mint', cardsToMint)
+    console.log('Is Airdrop Active?', airdropActive)
   }, [])
 
   useEffect(() => {
     checkChainBeforeContractInteraction()
   }, [chainId])
 
-  const checkChainBeforeContractInteraction = async () => { 
+  const checkChainBeforeContractInteraction = async () => {
     if (chainId === storeChainId) {
       totalMinted()
       getActiveSaleEvent()
@@ -175,7 +170,6 @@ function App(props) {
   }
 
   //Contract Getter Functions
-
 
   const getActiveSaleEvent = async () => {
     for (let i = 0; i < 5; i++) {
@@ -197,59 +191,61 @@ function App(props) {
   }
 
   const checkIfWhiteListed = async () => {
-    var wl;
-    if(account === undefined)
-    setIsWhiteListed(false)
-    else{
-    wl = await instance.methods.checkWhitelist(account, getProofForAddress(account)).call();
-    setIsWhiteListed(wl)
+    var wl
+    if (account === undefined) setIsWhiteListed(false)
+    else {
+      wl = await instance.methods
+        .checkWhitelist(account, getProofForAddress(account))
+        .call()
+      setIsWhiteListed(wl)
     }
   }
 
   const isAirdropActive = async () => {
-    var isAirdropOn;
-    isAirdropOn = await instance.methods.airdropActive().call();
-    setAirdropActive(isAirdropOn);
-    
+    var isAirdropOn
+    isAirdropOn = await instance.methods.airdropActive().call()
+    setAirdropActive(isAirdropOn)
   }
 
-  const checkCardsToClaim = async () => { 
-      try{
-      console.log("account", account);
-      const cards = await instance.methods.balanceOf(account).call();
-      const claimedCards = await instance.methods.claimedReimbursement(account).call();
-      const quantity = cards * 5;
-      console.log("Cards to claim:" + quantity);
-  
-      if (!cardsToClaim && (quantity > 0)){
-        setCardsToClaim(quantity);
-      } else if(claimedCards)  {
-        setCardsToClaim(0);
+  const checkCardsToClaim = async () => {
+    try {
+      console.log('account', account)
+      const cards = await instance.methods.balanceOf(account).call()
+      const claimedCards = await instance.methods
+        .claimedReimbursement(account)
+        .call()
+      const quantity = cards * 5
+      console.log('Cards to claim:' + quantity)
+
+      if (!cardsToClaim && quantity > 0) {
+        setCardsToClaim(quantity)
+      } else if (claimedCards) {
+        setCardsToClaim(0)
       }
-      return cardsToClaim;
+      return cardsToClaim
+    } catch (e) {
+      console.log(e.message)
     }
-    catch (e){
-      console.log(e.message);
-    }
-    
   }
 
-  const totalMinted = async () =>{
-    const total = await instance.methods.totalSupply().call();
-    setAmountLeft(total);
-    return total;
+  const totalMinted = async () => {
+    const total = await instance.methods.totalSupply().call()
+    setAmountLeft(total)
+    return total
   }
 
-  const claimedAirdrop = async () => { 
-    const isClaimedAirdrop = await instance.methods.claimedReimbursement(account).call();
-    console.log("claimed airdrop:" + isClaimedAirdrop);
+  const claimedAirdrop = async () => {
+    const isClaimedAirdrop = await instance.methods
+      .claimedReimbursement(account)
+      .call()
+    console.log('claimed airdrop:' + isClaimedAirdrop)
 
     if (isClaimedAirdrop) {
-      setAirdropClaimed(true);
+      setAirdropClaimed(true)
     } else {
-      setAirdropClaimed(false);
+      setAirdropClaimed(false)
     }
-    return isClaimedAirdrop;
+    return isClaimedAirdrop
   }
 
   const refreshPage = () => {
@@ -260,18 +256,29 @@ function App(props) {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
-    
+
     setTokenModal(true)
     try {
-      console.log("PRICEEE HERE: ", saleEvent.price.toString())
+      console.log('PRICEEE HERE: ', saleEvent.price.toString())
       const boyContract = getContract(account, provider)
       if (isWhiteListed && isPreSale) {
-        await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, getProofForAddress(account), 
-        {value: ethers.utils.parseEther(saleEvent.price.toString()),
-        gasLimit: 5000000})
+        await boyContract.preSaleMint(
+          saleEvent.saleEventNumber,
+          quantity,
+          getProofForAddress(account),
+          {
+            value: ethers.utils.parseEther(
+              (saleEvent.price * quantity).toString()
+            ),
+            gasLimit: 5000000,
+          }
+        )
       } else if (!isPreSale && isPublicSale) {
         await boyContract.publicMint(saleEvent.saleEventNumber, quantity, {
-          value: ethers.utils.parseEther(props.price.toString()),
+          value: ethers.utils.parseEther(
+            (saleEvent.price * quantity).toString()
+          ),
+          gasLimit: 5000000,
         })
       }
       if (!showMintResult) {
@@ -288,8 +295,7 @@ function App(props) {
     }
   }
   const formatErrorMessage = () => {
-    if (errorMessage.includes('Mint Limit Reached')) 
-      return 'Mint Limit Reached'
+    if (errorMessage.includes('Mint Limit Reached')) return 'Mint Limit Reached'
     else if (errorMessage.includes('insufficient funds'))
       return 'Insufficient Funds'
     else if (errorMessage.includes('reimbursed'))
@@ -301,25 +307,95 @@ function App(props) {
     else
       return 'Transaction Failed On The Blockchain, Your Purchase Was Reversed'
   }
-//
-// Application
+  //
+  // Application
   const displayCards = (
     <div className={styles.App}>
-      {metamaskActive ? null : <DisconnectButton /> }
+      {metamaskActive ? null : <DisconnectButton />}
       <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
       <div className={styles.quantityContainer}>
         <form>
-          <div style={{marginLeft: "auto", marginRight: "auto"}}>
-            <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
-            <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
-            <button className={styles.qtyButton} id="3" type="button" value="3" onClick={() => setCardsToMint(3)}>3</button>
-            <button className={styles.qtyButton} id="4" type="button" value="4" onClick={() => setCardsToMint(4)}>4</button>
-            <button className={styles.qtyButton} id="5" type="button" value="5" onClick={() => setCardsToMint(5)}>5</button>
-            <button className={styles.qtyButton} id="6" type="button" value="6" onClick={() => setCardsToMint(6)}>6</button>
-            <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
-            <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
+          <div style={{ marginLeft: 'auto', marginRight: 'auto' }}>
+            <button
+              className={styles.qtyButton}
+              id="1"
+              type="button"
+              value="1"
+              onClick={() => setCardsToMint(1)}
+            >
+              1
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="2"
+              type="button"
+              value="2"
+              onClick={() => setCardsToMint(2)}
+            >
+              2
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="3"
+              type="button"
+              value="3"
+              onClick={() => setCardsToMint(3)}
+            >
+              3
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="4"
+              type="button"
+              value="4"
+              onClick={() => setCardsToMint(4)}
+            >
+              4
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="5"
+              type="button"
+              value="5"
+              onClick={() => setCardsToMint(5)}
+            >
+              5
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="6"
+              type="button"
+              value="6"
+              onClick={() => setCardsToMint(6)}
+            >
+              6
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="7"
+              type="button"
+              value="7"
+              onClick={() => setCardsToMint(7)}
+            >
+              7
+            </button>
+            <button
+              className={styles.qtyButton}
+              id="8"
+              type="button"
+              value="8"
+              onClick={() => setCardsToMint(8)}
+            >
+              8
+            </button>
           </div>
-          <button className={styles.mintButton} type="submit" onSubmit={() => MintClick()}>Mint Exodus Card</button>
+          <button
+            className={styles.mintButton}
+            type="submit"
+            onSubmit={() => MintClick(cardsToMint)}
+          >
+            Mint Exodus Card
+          </button>
         </form>
       </div>
     </div>
@@ -327,13 +403,10 @@ function App(props) {
 
   const displayAirdropScreen = (
     <div className={styles.App}>
-      {metamaskActive ? null : <DisconnectButton /> }
+      {metamaskActive ? null : <DisconnectButton />}
       <h1 className={styles.welcomeScreenText}></h1>
-
     </div>
   )
-
-
 
   const displayConnectScreen = (
     <div className={styles.welcomeScreen}>
@@ -347,77 +420,97 @@ function App(props) {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
-    const isAirdrop = airdropActive;
+    const isAirdrop = airdropActive
 
-    console.log("SCREEN DISPLAY STATUS:", isActive, isPreSale, isPublicSale, airdropActive);
+    console.log(
+      'SCREEN DISPLAY STATUS:',
+      isActive,
+      isPreSale,
+      isPublicSale,
+      airdropActive
+    )
 
     if (isConnected && chainId === storeChainId) {
-    // IS AIRDROP ACTIVE AND PUBLIC/PRESALE IS OFF
-      
+      // IS AIRDROP ACTIVE AND PUBLIC/PRESALE IS OFF
+
       if (!isPreSale && !isPublicSale && isAirdrop) {
-        console.log("AIRDROP IS ACTIVE, PRESALE AND PUBLIC SALE IS NOT")
+        console.log('AIRDROP IS ACTIVE, PRESALE AND PUBLIC SALE IS NOT')
 
         //Users that have Genesis cards to claim and have not yet
-        if (!airdropClaimed && cardsToClaim > 0){
+        if (!airdropClaimed && cardsToClaim > 0) {
           return (
             <>
               <div className={styles.airdropContainer}>
                 <h1 className={styles.airdropScreenText}>
                   Press below to claim your cards.
                 </h1>
-                <p className={styles.airdropSubText}>When signing the transaction, cards from the new contract will be minted to your wallet 
-                <br></br>according to the new multiples.</p>
+                <p className={styles.airdropSubText}>
+                  When signing the transaction, cards from the new contract will
+                  be minted to your wallet
+                  <br></br>according to the new multiples.
+                </p>
                 <AirdropMintBox cardsToClaim={cardsToClaim}></AirdropMintBox>
-
               </div>
               ;
             </>
           )
-        } 
+        }
         //Users that have Genesis cards but have claimed airdrop already
-        else if (airdropClaimed && cardsToClaim > 0){
+        else if (airdropClaimed && cardsToClaim > 0) {
           return (
             <>
               <div className={styles.airdropContainer}>
                 <h1 className={styles.airdropScreenText}>
                   Your cards have been claimed.
                 </h1>
-                <p className={styles.airdropSubText}>Please check your wallet. </p>
-                <DisconnectButton/>
-
-              </div>
-              ;
-            </>
-          )
-        } 
-        //Users that have 0 Genesis cards
-        else if (!airdropClaimed && cardsToClaim == 0){
-          return (
-            <>
-              <div className={styles.airdropContainer}>
-                <p style={{fontFamily: "Inter", fontSize:"10px"}} className={styles.airdropSubText}>WE'RE SORRY</p>
-                <h1 className={styles.airdropScreenText}>
-                There doesn’t appear to be any Genesis <br></br>cards in this wallet.
-                </h1>
-                <DisconnectButton/>
-
+                <p className={styles.airdropSubText}>
+                  Please check your wallet.{' '}
+                </p>
+                <DisconnectButton />
               </div>
               ;
             </>
           )
         }
-    
+        //Users that have 0 Genesis cards
+        else if (!airdropClaimed && cardsToClaim == 0) {
+          return (
+            <>
+              <div className={styles.airdropContainer}>
+                <p
+                  style={{ fontFamily: 'Inter', fontSize: '10px' }}
+                  className={styles.airdropSubText}
+                >
+                  WE'RE SORRY
+                </p>
+                <h1 className={styles.airdropScreenText}>
+                  There doesn’t appear to be any Genesis <br></br>cards in this
+                  wallet.
+                </h1>
+                <DisconnectButton />
+              </div>
+              ;
+            </>
+          )
+        }
       }
 
-    //IF PRESALE AND PUBLIC SALE IS OFF
-    else if (!airdropActive && !isPreSale && !isPublicSale) {
-        console.log("AIRDROP, PRESALE, AND SALE ISNT ACTIVE")
+      //IF PRESALE AND PUBLIC SALE IS OFF
+      else if (!airdropActive && !isPreSale && !isPublicSale) {
+        console.log('AIRDROP, PRESALE, AND SALE ISNT ACTIVE')
 
         if (isWhiteListed) {
           return (
-            <div style={{width:"90%", marginTop:"18%", marginLeft:"auto", marginRight:"auto"}}>
+            <div
+              style={{
+                width: '90%',
+                marginTop: '18%',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+              }}
+            >
               <p className={styles.welcomeSubText}>THANK YOU</p>;
-              {metamaskActive ? null : <DisconnectButton /> }
+              {metamaskActive ? null : <DisconnectButton />}
               <h1 className={styles.welcomeScreenText}>
                 You are on the whitelist.
                 <br></br>
@@ -427,11 +520,9 @@ function App(props) {
                   <button onClick={refreshPage}>Enter Sale</button>
                 </Countdown>
               </h1>
-              
             </div>
           )
-        } 
-        else if (!isWhiteListed) {
+        } else if (!isWhiteListed) {
           return (
             <>
               <p className={styles.welcomeSubText}>THANK YOU</p>
@@ -446,130 +537,294 @@ function App(props) {
             </>
           )
         }
-    } 
-    //PRE-SALE IS ACTIVE AND ON WL
-    else if (isActive && isPreSale && isWhiteListed) {
-        console.log("PRESALE IS ACTIVE AND ON WL")
+      }
+      //PRE-SALE IS ACTIVE AND ON WL
+      else if (isActive && isPreSale && isWhiteListed) {
+        console.log('PRESALE IS ACTIVE AND ON WL')
         return (
-        <>
-          <div className={styles.header}>
-            <img className={styles.logo} src={"/logo.png"} alt="" />
-            <div className={styles.videoContainer}>
-              <video autoPlay loop style={{ width: '100%', height: '100%' }}>
-                <source src="/testvideo.mp4" />
-              </video>
-            </div>
-          </div>
-          <div className={styles.App}>
-          {metamaskActive ? null : <DisconnectButton /> }
-            <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
-          <div>
-            <div className={styles.formContainer}>
-              <div className={styles.quantityContainer}>
-                <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
-                <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
-                <button className={styles.qtyButton} id="3" type="button" value="3" onClick={() => setCardsToMint(3)}>3</button>
-                <button className={styles.qtyButton} id="4" type="button" value="4" onClick={() => setCardsToMint(4)}>4</button>
-                <button className={styles.qtyButton} id="5" type="button" value="5" onClick={() => setCardsToMint(5)}>5</button>
-                <button className={styles.qtyButton} id="6" type="button" value="6" onClick={() => setCardsToMint(6)}>6</button>
-                <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
-                <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
+          <>
+            <div className={styles.header}>
+              <img className={styles.logo} src={'/logo.png'} alt="" />
+              <div className={styles.videoContainer}>
+                <video autoPlay loop style={{ width: '100%', height: '100%' }}>
+                  <source src="/testvideo.mp4" />
+                </video>
               </div>
-              <button className={styles.mintButton} type="submit" onClick={() => MintClick(cardsToMint, getProofForAddress(account))}>Mint Exodus Card</button>
             </div>
-            <TokenModal
-        isOpen={tokenModal}
-        preventScroll={true}
-        style={{
-          overlay: {
-            zIndex: 1000,
-            backgroundColor: 'black',
-            background: 'rgba(0, 0, 0, 0.9)',
-          },
-        }}
-      >
-        <TokenModalImage src={'./unknown-card.png'} />
-        <CloseModelX src="./close_x.png" 
-        onClick={() => { 
-          setTokenModal(false) 
-          setShowMintResult(false)
-        }}
-        />
+            <div className={styles.App}>
+              {metamaskActive ? null : <DisconnectButton />}
+              <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
+              <div>
+                <div className={styles.formContainer}>
+                  <div className={styles.quantityContainer}>
+                    <button
+                      className={styles.qtyButton}
+                      id="1"
+                      type="button"
+                      value="1"
+                      onClick={() => setCardsToMint(1)}
+                    >
+                      1
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="2"
+                      type="button"
+                      value="2"
+                      onClick={() => setCardsToMint(2)}
+                    >
+                      2
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="3"
+                      type="button"
+                      value="3"
+                      onClick={() => setCardsToMint(3)}
+                    >
+                      3
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="4"
+                      type="button"
+                      value="4"
+                      onClick={() => setCardsToMint(4)}
+                    >
+                      4
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="5"
+                      type="button"
+                      value="5"
+                      onClick={() => setCardsToMint(5)}
+                    >
+                      5
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="6"
+                      type="button"
+                      value="6"
+                      onClick={() => setCardsToMint(6)}
+                    >
+                      6
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="7"
+                      type="button"
+                      value="7"
+                      onClick={() => setCardsToMint(7)}
+                    >
+                      7
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="8"
+                      type="button"
+                      value="8"
+                      onClick={() => setCardsToMint(8)}
+                    >
+                      8
+                    </button>
+                  </div>
+                  <button
+                    className={styles.mintButton}
+                    type="submit"
+                    onClick={() =>
+                      MintClick(cardsToMint, getProofForAddress(account))
+                    }
+                  >
+                    Mint Exodus Card
+                  </button>
+                </div>
+                <TokenModal
+                  isOpen={tokenModal}
+                  preventScroll={true}
+                  style={{
+                    overlay: {
+                      zIndex: 1000,
+                      backgroundColor: 'black',
+                      background: 'rgba(0, 0, 0, 0.9)',
+                    },
+                  }}
+                >
+                  <TokenModalImage src={'./unknown-card.png'} />
+                  <CloseModelX
+                    src="./close_x.png"
+                    onClick={() => {
+                      setTokenModal(false)
+                      setShowMintResult(false)
+                    }}
+                  />
 
-        {!showMintResult ? (
-          <ResponseContainer>
-            <ModalCircleLoader src={'./modalCircle.png'}></ModalCircleLoader>
-            <TokenModalHeading>{isSigning ? 'Signing' : 'Please Sign the Transaction'}</TokenModalHeading>
-            <TokenModalText>{isSigning ? '' : 'Note that if the transaction fails on the blockchain, the purchase will be reversed.'}</TokenModalText>  
-          </ResponseContainer>
-        ) : (
-          <ResponseContainer>
-            {mintWasSuccessful ? (
-              <>
-                <ModalStatusImage src="/Checkmark.png"></ModalStatusImage>
-                <TokenModalHeading>Cards Minted</TokenModalHeading>
-              </>
-            ) : (
-              <>
-                <ModalStatusImage src="/failed.png"></ModalStatusImage>
-                <TokenModalHeading>Transaction Failed</TokenModalHeading>
-                <MessageContainer>
-                  <ErrorMessage>{formatErrorMessage()}</ErrorMessage>
-                </MessageContainer>
-              </>
-            )}
-          </ResponseContainer>
-        )}
-        </TokenModal>
-          </div>
-          </div>  
-        </>
-        )
-      } 
-
-    // PUBLIC SALE IS ACTIVE
-    else if (isActive && isPublicSale && !isPreSale) {
-      console.log("SALE EVENT IS ACTIVE, PUBLIC SALE IS ACTIVE, PRESALE IS NOT ACTIVE")
-  
-      return (
-        <>
-        <div className={styles.header}>
-          <img className={styles.logo} src={"/logo.png"} alt="" />
-          <div className={styles.videoContainer}>
-            <video autoPlay loop style={{ width: '100%', height: '100%' }}>
-              <source src="/testvideo.mp4" />
-            </video>
-          </div>
-        </div>
-        <div className={styles.App}>
-        {metamaskActive ? null : <DisconnectButton /> }
-          <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
-        <div>
-          <form className={styles.formContainer}>
-            <div className={styles.quantityContainer}>
-              <button className={styles.qtyButton} id="1" type="button" value="1" onClick={() => setCardsToMint(1)}>1</button>
-              <button className={styles.qtyButton} id="2" type="button" value="2" onClick={() => setCardsToMint(2)}>2</button>
-              <button className={styles.qtyButton} id="3" type="button" value="3" onClick={() => setCardsToMint(3)}>3</button>
-              <button className={styles.qtyButton} id="4" type="button" value="4" onClick={() => setCardsToMint(4)}>4</button>
-              <button className={styles.qtyButton} id="5" type="button" value="5" onClick={() => setCardsToMint(5)}>5</button>
-              <button className={styles.qtyButton} id="6" type="button" value="6" onClick={() => setCardsToMint(6)}>6</button>
-              <button className={styles.qtyButton} id="7" type="button" value="7" onClick={() => setCardsToMint(7)}>7</button>
-              <button className={styles.qtyButton} id="8" type="button" value="8" onClick={() => setCardsToMint(8)}>8</button>
+                  {!showMintResult ? (
+                    <ResponseContainer>
+                      <ModalCircleLoader
+                        src={'./modalCircle.png'}
+                      ></ModalCircleLoader>
+                      <TokenModalHeading>
+                        {isSigning ? 'Signing' : 'Please Sign the Transaction'}
+                      </TokenModalHeading>
+                      <TokenModalText>
+                        {isSigning
+                          ? ''
+                          : 'Note that if the transaction fails on the blockchain, the purchase will be reversed.'}
+                      </TokenModalText>
+                    </ResponseContainer>
+                  ) : (
+                    <ResponseContainer>
+                      {mintWasSuccessful ? (
+                        <>
+                          <ModalStatusImage src="/Checkmark.png"></ModalStatusImage>
+                          <TokenModalHeading>Cards Minted</TokenModalHeading>
+                        </>
+                      ) : (
+                        <>
+                          <ModalStatusImage src="/failed.png"></ModalStatusImage>
+                          <TokenModalHeading>
+                            Transaction Failed
+                          </TokenModalHeading>
+                          <MessageContainer>
+                            <ErrorMessage>{formatErrorMessage()}</ErrorMessage>
+                          </MessageContainer>
+                        </>
+                      )}
+                    </ResponseContainer>
+                  )}
+                </TokenModal>
+              </div>
             </div>
-            <button className={styles.mintButton} type="submit" onSubmit={() => MintClick()}>Mint Exodus Card</button>
-          </form>
-        </div>
-        </div>
-        </>
+          </>
         )
-      } 
-    // PRESALE IS ACTIVE AND USER ISNT ON WL
-    else if ((isPreSale && !isPublicSale && !isWhiteListed) || (isPreSale && isPublicSale && !isWhiteListed)
-      ) {
-        console.log("PRESALE IS ACTIVE BUT USER IS NOT ON WL")
+      }
+
+      // PUBLIC SALE IS ACTIVE
+      else if (isActive && isPublicSale && !isPreSale) {
+        console.log(
+          'SALE EVENT IS ACTIVE, PUBLIC SALE IS ACTIVE, PRESALE IS NOT ACTIVE'
+        )
+
         return (
-          <div style={{width:"90%", marginTop:"18%", marginLeft:"auto", marginRight:"auto"}}>
-            {metamaskActive ? null : <DisconnectButton /> }
+          <>
+            <div className={styles.header}>
+              <img className={styles.logo} src={'/logo.png'} alt="" />
+              <div className={styles.videoContainer}>
+                <video autoPlay loop style={{ width: '100%', height: '100%' }}>
+                  <source src="/testvideo.mp4" />
+                </video>
+              </div>
+            </div>
+            <div className={styles.App}>
+              {metamaskActive ? null : <DisconnectButton />}
+              <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
+              <div>
+                <form className={styles.formContainer}>
+                  <div className={styles.quantityContainer}>
+                    <button
+                      className={styles.qtyButton}
+                      id="1"
+                      type="button"
+                      value="1"
+                      onClick={() => setCardsToMint(1)}
+                    >
+                      1
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="2"
+                      type="button"
+                      value="2"
+                      onClick={() => setCardsToMint(2)}
+                    >
+                      2
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="3"
+                      type="button"
+                      value="3"
+                      onClick={() => setCardsToMint(3)}
+                    >
+                      3
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="4"
+                      type="button"
+                      value="4"
+                      onClick={() => setCardsToMint(4)}
+                    >
+                      4
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="5"
+                      type="button"
+                      value="5"
+                      onClick={() => setCardsToMint(5)}
+                    >
+                      5
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="6"
+                      type="button"
+                      value="6"
+                      onClick={() => setCardsToMint(6)}
+                    >
+                      6
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="7"
+                      type="button"
+                      value="7"
+                      onClick={() => setCardsToMint(7)}
+                    >
+                      7
+                    </button>
+                    <button
+                      className={styles.qtyButton}
+                      id="8"
+                      type="button"
+                      value="8"
+                      onClick={() => setCardsToMint(8)}
+                    >
+                      8
+                    </button>
+                  </div>
+                  <button
+                    className={styles.mintButton}
+                    type="submit"
+                    onSubmit={() => MintClick()}
+                  >
+                    Mint Exodus Card
+                  </button>
+                </form>
+              </div>
+            </div>
+          </>
+        )
+      }
+      // PRESALE IS ACTIVE AND USER ISNT ON WL
+      else if (
+        (isPreSale && !isPublicSale && !isWhiteListed) ||
+        (isPreSale && isPublicSale && !isWhiteListed)
+      ) {
+        console.log('PRESALE IS ACTIVE BUT USER IS NOT ON WL')
+        return (
+          <div
+            style={{
+              width: '90%',
+              marginTop: '18%',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            {metamaskActive ? null : <DisconnectButton />}
             <p className={styles.welcomeSubText}>THANK YOU</p>
             <h1 className={styles.welcomeScreenText}>
               The Sale will begin after the Pre-Sale has finished, if there is
@@ -579,21 +834,23 @@ function App(props) {
           </div>
         )
       }
-    }  
-    else {
-      console.log("CONNECT SCREEN")
+    } else {
+      console.log('CONNECT SCREEN')
 
-      return displayConnectScreen;
+      return displayConnectScreen
     }
-  } 
+  }
 
   const preSaleOrPublic = () => {
     if (airdropActive) {
       return 'Airdrop'
-    } else if (!airdropActive && !saleEvent.isPresale && !saleEvent.isPublicSale){
+    } else if (
+      !airdropActive &&
+      !saleEvent.isPresale &&
+      !saleEvent.isPublicSale
+    ) {
       return 'Pre-Sale'
-    }
-    else if (saleEvent.isPresale && !saleEvent.isPublicSale) {
+    } else if (saleEvent.isPresale && !saleEvent.isPublicSale) {
       return 'Pre-Sale'
     } else if (!saleEvent.isPresale && saleEvent.isPublicSale) {
       return 'Sale'
@@ -603,9 +860,9 @@ function App(props) {
   return (
     <>
       <Layout>
-      <div className={styles.header}>
-        <img className={styles.logo} src={"/logo.png"} alt="" />
-      </div>
+        <div className={styles.header}>
+          <img className={styles.logo} src={'/logo.png'} alt="" />
+        </div>
         {displayScreen()}
       </Layout>
       <Tab
