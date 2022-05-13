@@ -254,7 +254,7 @@ function App(props) {
     window.location.reload()
   }
 
-  const MintClick = async (quantity, proof) => {
+  const MintClick = async (quantity) => {
     const isActive = saleEvent.isActive
     const isPreSale = saleEvent.isPreSale
     const isPublicSale = saleEvent.isPublicSale
@@ -265,7 +265,7 @@ function App(props) {
       if (isWhiteListed && isPreSale) {
         await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, getProofForAddress(account), {value: ethers.utils.parseEther(props.price.toString()),})
       } else if (!isPreSale && isPublicSale) {
-        await boyContract.publicMint(saleEvent.saleEventNumber, 1, {
+        await boyContract.publicMint(saleEvent.saleEventNumber, quantity, {
           value: ethers.utils.parseEther(props.price.toString()),
         })
       }
