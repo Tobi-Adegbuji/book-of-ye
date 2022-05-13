@@ -18,6 +18,8 @@ import { BlockForkEvent } from '@ethersproject/abstract-provider'
 import ReactModal from 'react-modal'
 import { getContract } from '../utils/BoyContract'
 import { getProofForAddress } from '../merkle_tree.js'
+import { ethers } from 'ethers'
+
 
 const TokenModal = styled(ReactModal)`
   color: #ffffff;
@@ -261,9 +263,12 @@ function App(props) {
     
     setTokenModal(true)
     try {
+      console.log("PRICEEE HERE: ", saleEvent.price.toString())
       const boyContract = getContract(account, provider)
       if (isWhiteListed && isPreSale) {
-        await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, getProofForAddress(account), {value: ethers.utils.parseEther(props.price.toString()),})
+        await boyContract.preSaleMint(saleEvent.saleEventNumber, quantity, getProofForAddress(account), 
+        {value: ethers.utils.parseEther(saleEvent.price.toString()),
+        gasLimit: 5000000})
       } else if (!isPreSale && isPublicSale) {
         await boyContract.publicMint(saleEvent.saleEventNumber, quantity, {
           value: ethers.utils.parseEther(props.price.toString()),
