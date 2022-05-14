@@ -122,7 +122,7 @@ function App(props) {
 
   const [airdropActive, setAirdropActive] = useState()
   const [cardsToMint, setCardsToMint] = useState(0)
-  const [cardsToClaim, setCardsToClaim] = useState()
+  const [cardsToClaim, setCardsToClaim] = useState(0)
   const [airdropClaimed, setAirdropClaimed] = useState(false)
   const [tokenModal, setTokenModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -160,12 +160,14 @@ function App(props) {
 
   const checkChainBeforeContractInteraction = async () => {
     if (chainId === storeChainId) {
+      isAirdropActive()
+      checkCardsToClaim()
+      claimedAirdrop()
       totalMinted()
       getActiveSaleEvent()
       checkIfWhiteListed()
-      checkCardsToClaim()
-      claimedAirdrop()
-      isAirdropActive()
+      
+      
     }
   }
 
@@ -230,14 +232,13 @@ function App(props) {
 
   const totalMinted = async () => {
     const total = await instance.methods.totalSupply().call()
-    setAmountLeft(total)
+    const remainder = 1000 - total;
+    setAmountLeft(remainder);
     return total
   }
 
   const claimedAirdrop = async () => {
-    const isClaimedAirdrop = await instance.methods
-      .claimedReimbursement(account)
-      .call()
+    const isClaimedAirdrop = await instance.methods.claimedReimbursement(account).call();
     console.log('claimed airdrop:' + isClaimedAirdrop)
 
     if (isClaimedAirdrop) {
@@ -435,45 +436,10 @@ function App(props) {
 
       if (!isPreSale && !isPublicSale && isAirdrop) {
         console.log('AIRDROP IS ACTIVE, PRESALE AND PUBLIC SALE IS NOT')
-
-        //Users that have Genesis cards to claim and have not yet
-        if (!airdropClaimed && cardsToClaim > 0) {
-          return (
-            <>
-              <div className={styles.airdropContainer}>
-                <h1 className={styles.airdropScreenText}>
-                  Press below to claim your cards.
-                </h1>
-                <p className={styles.airdropSubText}>
-                  When signing the transaction, cards from the new contract will
-                  be minted to your wallet
-                  <br></br>according to the new multiples.
-                </p>
-                <AirdropMintBox cardsToClaim={cardsToClaim}></AirdropMintBox>
-              </div>
-              ;
-            </>
-          )
-        }
-        //Users that have Genesis cards but have claimed airdrop already
-        else if (airdropClaimed && cardsToClaim > 0) {
-          return (
-            <>
-              <div className={styles.airdropContainer}>
-                <h1 className={styles.airdropScreenText}>
-                  Your cards have been claimed.
-                </h1>
-                <p className={styles.airdropSubText}>
-                  Please check your wallet.{' '}
-                </p>
-                <DisconnectButton />
-              </div>
-              ;
-            </>
-          )
-        }
+        console.log(cardsToClaim);
         //Users that have 0 Genesis cards
-        else if (!airdropClaimed && cardsToClaim == 0) {
+        if (cardsToClaim == 0) {
+          console.log("airdrop screen 1 - 0 Gen Cards");
           return (
             <>
               <div className={styles.airdropContainer}>
@@ -493,6 +459,45 @@ function App(props) {
             </>
           )
         }
+        //Users that have Genesis cards to claim and have not yet
+        else if (!airdropClaimed && cardsToClaim > 0) {
+          console.log("airdrop screen 2 - has Gen Cards");
+
+          return (
+            <>
+              <div className={styles.airdropContainer}>
+                <h1 className={styles.airdropScreenText}>
+                  Press below to claim your cards.
+                </h1>
+                <p className={styles.airdropSubText}>
+                  When signing the transaction, cards from the new contract will
+                  be minted to your wallet
+                  <br></br>according to the new multiples.
+                </p>
+                <AirdropMintBox cardsToClaim={cardsToClaim}></AirdropMintBox>
+              </div>
+              ;
+            </>
+          )
+        }
+        //Users that have Genesis cards but have claimed airdrop already
+        else if (airdropClaimed && cardsToClaim > 0) {
+          console.log("airdrop screen 3 - already claimed");
+
+          return (
+            <>
+              <div className={styles.airdropContainer}>
+                <h1 className={styles.airdropScreenText}>
+                  Your cards have been claimed.
+                </h1>
+                <p className={styles.airdropSubText}>
+                  Please check your wallet.{' '}
+                </p>
+              </div>
+              ;
+            </>
+          )
+        } 
       }
 
       //IF PRESALE AND PUBLIC SALE IS OFF
@@ -679,7 +684,8 @@ function App(props) {
                       {mintWasSuccessful ? (
                         <>
                           <ModalStatusImage src="/Checkmark.png"></ModalStatusImage>
-                          <TokenModalHeading>Cards Minted</TokenModalHeading>
+                          <TokenModalHeading>Congratulations</TokenModalHeading>
+                          <TokenModalText>Your card(s) has been reserved. Please check your wallet.</TokenModalText>
                         </>
                       ) : (
                         <>
@@ -721,7 +727,7 @@ function App(props) {
               {metamaskActive ? null : <DisconnectButton />}
               <h1 className={styles.mintSubtext}>Quantity To Mint</h1>
               <div>
-                <form className={styles.formContainer}>
+                <div className={styles.formContainer}>
                   <div className={styles.quantityContainer}>
                     <button
                       className={styles.qtyButton}
@@ -798,12 +804,67 @@ function App(props) {
                   </div>
                   <button
                     className={styles.mintButton}
-                    type="submit"
-                    onSubmit={() => MintClick()}
+                    onClick={() => MintClick(cardsToMint)}
                   >
                     Mint Exodus Card
                   </button>
-                </form>
+                </div>
+                <TokenModal
+                  isOpen={tokenModal}
+                  preventScroll={true}
+                  style={{
+                    overlay: {
+                      zIndex: 1000,
+                      backgroundColor: 'black',
+                      background: 'rgba(0, 0, 0, 0.9)',
+                    },
+                  }}
+                >
+                  <TokenModalImage src={'./unknown-card.png'} />
+                  <CloseModelX
+                    src="./close_x.png"
+                    onClick={() => {
+                      setTokenModal(false)
+                      setShowMintResult(false)
+                    }}
+                  />
+
+                  {!showMintResult ? (
+                    <ResponseContainer>
+                      <ModalCircleLoader
+                        src={'./modalCircle.png'}
+                      ></ModalCircleLoader>
+                      <TokenModalHeading>
+                        {isSigning ? 'Signing' : 'Please Sign the Transaction'}
+                      </TokenModalHeading>
+                      <TokenModalText>
+                        {isSigning
+                          ? ''
+                          : 'Note that if the transaction fails on the blockchain, the purchase will be reversed.'}
+                      </TokenModalText>
+                    </ResponseContainer>
+                  ) : (
+                    <ResponseContainer>
+                      {mintWasSuccessful ? (
+                        <>
+                          <ModalStatusImage src="/Checkmark.png"></ModalStatusImage>
+                          <TokenModalHeading>Congratulations</TokenModalHeading>
+                          <TokenModalText>Your card(s) has been reserved. Please check your wallet.</TokenModalText>
+                        </>
+                      ) : (
+                        <>
+                          <ModalStatusImage src="/failed.png"></ModalStatusImage>
+                          <TokenModalHeading>
+                            Transaction Failed
+                          </TokenModalHeading>
+                          <MessageContainer>
+                            <ErrorMessage>{formatErrorMessage()}</ErrorMessage>
+                          </MessageContainer>
+                        </>
+                      )}
+                    </ResponseContainer>
+                  )}
+                </TokenModal>
               </div>
             </div>
           </>

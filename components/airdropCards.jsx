@@ -24,11 +24,11 @@ const ClaimCards = styled.div`
   color: black;
   background-color: #f3eee4;
   width: 200px;
-  padding: 2em;
+  padding: 1.3em;
   border-radius: 0.3em;
   margin-top: 0px;
   cursor: pointer;
-  font-size: 8px;
+  font-size: 13px;
   font-family: 'Inter';
   text-align: center;
 `
@@ -45,7 +45,7 @@ const QtyText = styled.p`
   font-family: 'Inter';
   font-size: 8px;
   margin-top: 10px;
-  padding-top: 10px;
+  padding-top: -10px;
 `
 const QtyNumber = styled.h1`
   display: block;
